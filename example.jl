@@ -17,7 +17,7 @@ ob = SquareLattice()
 
 p, inters, para, ob = setPara(pack, lp, r, ob)
 
-loggers = Dict("traj" => TrajLogger(), "coll"=>CollideLogger())
+loggers = Dict("traj" => TrajLogger())
 ### crete sys object 
 sys = System(p, inters, para, loggers)
 
