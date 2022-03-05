@@ -6,8 +6,11 @@ gr(show = true);
 
 
 
-d = 1
-R = 0.45
+
+
+pack = 0.7 
+R = 1
+
 
 pos0 = [0.5, 0.5] .+ randn(2) * d / 2
 pos0 = [0.5, 0.5]
@@ -22,21 +25,22 @@ dt = 0.001
 n_step = 100_000
 n_take = n_step
 
-@with_kw mutable struct CustomLogger
+
+@with_kw mutable struct Logger <: CustomLogger
     coord::Vector{SV} = Vector{SV}(undef, n_take)
     vel::Vector{SV} = Vector{SV}(undef, n_take)
     t::Vector{Float64} = Vector{Int}(undef, n_take)
     coliide::Vector{Int} = Vector{Int}(undef, n_take)
 end
 
-loggers = CustomLogger()
+
+loggers = Logger()
 function logging!(logger::CustomLogger, p::Particle, para::Parameter, step)
     logger.coord[step] = p.pos
     logger.vel[step] = p.vel
     logger.t[step] = step * para.dt
     logger.coliide[step] = p.collide
 end
-
 
 # loggers = Dict("traj" => TrajLogger())
 

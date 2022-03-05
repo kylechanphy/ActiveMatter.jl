@@ -21,7 +21,7 @@ end
 
 # single particle system / non- interacting particles system
 function Langevin!(p::Particle, para::Parameter, inter::ObstacleCollision, logger)
-    @unpack v0, flow, flow_dir, Dr, dt, n_step = para
+    @unpack v0, ω0, flow, flow_dir, Dr, dt, n_step = para
     ob = inter.ob
     vg = flow * SV(cosd(flow_dir), sind(flow_dir))
 
@@ -32,7 +32,7 @@ function Langevin!(p::Particle, para::Parameter, inter::ObstacleCollision, logge
     ## check if pos0 inside the obstacle
     p.collide, _ = getCollsionForoce(p, cell_du, SV(0, 0), ob)
     while p.collide == 1
-        p.pos = p.pos + 0.5 * ob.d * randn(2)
+        p.pos = p.pos +  ob.d/4 * randn(2)
         p.cell_pos = fold(p.pos, ob)
         p.collide, _ = getCollsionForoce(p, p.cell_pos, SV(0, 0), ob)
         @show p.collide
@@ -68,7 +68,7 @@ function Langevin!(p::Particle, para::Parameter, inter::ObstacleCollision, logge
         cell_du = p.cell_pos .+ total_forces * dt
         p.cell_pos = fold(cell_du, ob)
 
-        ϕ += sqrt(2 * Dr * dt) * randn()
+        ϕ += ω0*dt +  sqrt(2 * Dr * dt) * randn()
     
         runLogger!(logger, p, i, para::Parameter)
     end

@@ -15,11 +15,14 @@ export
 """
 Free FreeSpace
 """
-struct FreeSpace <: ObstacleLattice end
-
+struct FreeSpace <: ObstacleLattice
+    d::Float64 # latice constant
+    r::Float64 # radius of obstacle
+end
+FreeSpace() = FreeSpace(1,1)
 function fold(pos::SV, ob::FreeSpace)
     return pos
-    
+
 end
 
 """
@@ -30,6 +33,7 @@ struct SquareLattice <: ObstacleLattice
     d::Float64 # latice constant
     r::Float64 # radius of obstacle
 end
+SquareLattice() = SquareLattice(1, 0.2)
 
 
 function fold(pos::SV, ob::SquareLattice)
@@ -38,17 +42,18 @@ end
 
 function getCent_lst(ob::SquareLattice)
     d = ob.d
-    return (SV(0, 0), SV(d, 0), SV(d,d), SV(0,d))
+    return (SV(0, 0), SV(d, 0), SV(d, d), SV(0, d))
 end
 
 """
 Triangle Lattice 
 consider parallelogram with 4 obstacle located at corner 
 """
-struct TriangularLattice <: ObstacleLattice
+ struct TriangularLattice <: ObstacleLattice
     d::Float64
     r::Float64
 end
+TriangularLattice() = TriangularLattice(1, 0.2)
 
 
 function fold(pos::SV, ob::TriangularLattice)

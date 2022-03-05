@@ -7,7 +7,7 @@ circle(R, x, y) = (θ = LinRange(0, 2π, 30);
 ###            
 
 
-function RecipesBase.plot(ob::SquareLattice, N)
+function RecipesBase.plot(ob::SquareLattice, N=4)
     d = ob.d
     R = ob.r
     # N = N+1
@@ -64,3 +64,12 @@ end
 
 
 
+
+function RecipesBase.plot(traj::Vector{SV})
+    x = [v[1] for v in traj]
+    y = [v[2] for v in traj]
+
+    plt = plot( x, y, label = "")
+
+    return plt
+end
