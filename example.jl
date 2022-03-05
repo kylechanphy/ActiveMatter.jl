@@ -11,13 +11,13 @@ gr(show = true);
 ### input parameter
 
 lp = 100
-r = 0.5
+r = 1
 pack = 0.7
 ob = SquareLattice()
 
 p, inters, para, ob = setPara(pack, lp, r, ob)
 
-loggers = Dict("pos" => PosLogger())
+loggers = Dict("traj" => TrajLogger(), "coll"=>CollideLogger())
 ### crete sys object 
 sys = System(p, inters, para, loggers)
 
@@ -25,5 +25,5 @@ sys = System(p, inters, para, loggers)
 runSim(sys)
 
 ### plot trajactory 
-pic = plot(ob, 4, loggers["pos"].coord)
+pic = plot(ob, 3, loggers["traj"].coord)
 display(pic)

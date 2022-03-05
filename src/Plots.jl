@@ -27,29 +27,6 @@ function RecipesBase.plot(ob::SquareLattice, N=4)
     return plt
 end
 
-function RecipesBase.plot(ob::SquareLattice, N, traj::TrajLogger)
-    plt = plot(ob, N)
-
-    x = [v[1] for v in traj.coord]
-    y = [v[2] for v in traj.coord]
-
-    plot!(plt, x, y, label = "")
-    scatter!(plt, [x[1]], [y[1]], label="")
-
-    return plt
-end
-
-
-function RecipesBase.plot(ob::SquareLattice, N, traj::PosLogger)
-    plt = plot(ob, N)
-
-    x = [v[1] for v in traj.coord]
-    y = [v[2] for v in traj.coord]
-
-    plot!(plt, x, y, label = "")
-
-    return plt
-end
 
 function RecipesBase.plot(ob::SquareLattice, N, traj::AbstractArray)
     plt = plot(ob, N)
@@ -58,6 +35,8 @@ function RecipesBase.plot(ob::SquareLattice, N, traj::AbstractArray)
     y = [v[2] for v in traj]
 
     plot!(plt, x, y, label = "")
+    # scatter!(plt, [x], [y], label = "")
+    # scatter!(plt, [1.0592437756635953], [1.0592437756635953], label = "")
 
     return plt
 end

@@ -24,24 +24,25 @@ function Langevin!(p::Particle, para::Parameter, inter::ObstacleCollision, logge
     @unpack v0, ω0, flow, flow_dir, Dr, dt, n_step = para
     ob = inter.ob
     vg = flow * SV(cosd(flow_dir), sind(flow_dir))
-
-    ### initialize unit cell positon
-    p.cell_pos = p.pos
-    cell_du = copy(p.cell_pos)
+    cent_lst = getCent_lst(ob)
 
     ## check if pos0 inside the obstacle
-    p.collide, _ = getCollsionForoce(p, cell_du, SV(0, 0), ob)
+    p.collide, _ = getCollsionForoce(p.pos, fold(p.pos, ob), SV(0, 0), ob)
     while p.collide == 1
-        p.pos = p.pos +  ob.d/4 * randn(2)
-        p.cell_pos = fold(p.pos, ob)
-        p.collide, _ = getCollsionForoce(p, p.cell_pos, SV(0, 0), ob)
         @show p.collide
+        p.pos = p.pos + ob.d / 4 * randn(2)
+        p.collide, _ = getCollsionForoce(p.pos, fold(p.pos, ob), SV(0, 0), ob)
         if p.collide == 0
             break
         end
     end
 
-    du = copy(p.pos)
+    u0 = p.pos
+    du = copy(u0)
+
+    cell_du = copy(du)
+    cell_u0 = copy(u0)
+
     ϕ = atan(p.vel[2], p.vel[1])
     getHead(ϕ) = SV(cos(ϕ), sin(ϕ))
 
@@ -49,26 +50,37 @@ function Langevin!(p::Particle, para::Parameter, inter::ObstacleCollision, logge
     setLogger!(logger, para)
 
     for i in 1:n_step
-    
+        # if norm(p.vel) > 1
+        #     @show norm(p.vel), p.collide
+        # end
         hat_p = getHead(ϕ)
         forces = v0 .* hat_p .+ vg
     
-        cell_du = p.cell_pos .+ forces .* dt
-        cell_du = fold(cell_du, ob)
-        iscollided, collided_F = getCollsionForoce(p, cell_du, forces, ob)
+        cell_du = cell_u0 .+ forces .* dt
+        iscollided, collided_F = getCollsionForoce(cell_u0, cell_du, forces, cent_lst, ob)
         p.collide = iscollided
     
         total_forces = forces .+ collided_F
-        # @show total_forces
-        du = p.pos .+ total_forces * dt
     
-        p.vel = total_forces
-        p.pos, du = du, p.pos
+        cell_du = cell_u0 .+ total_forces * dt
+        cell_du = fold(cell_du, ob)
+        cell_u0, cell_du = cell_du, cell_u0
+        p.cell_pos = cell_u0
     
-        cell_du = p.cell_pos .+ total_forces * dt
-        p.cell_pos = fold(cell_du, ob)
-
-        ϕ += ω0*dt +  sqrt(2 * Dr * dt) * randn()
+        du = u0 + total_forces * dt
+        u0, du = du, u0
+        p.pos = du
+    
+       """ check correct collision
+        for c in cent_lst
+            dis = norm(c - p.cell_pos)
+            if dis < ob.r
+                @show dis, c
+            end
+        end
+        """
+    
+        ϕ += ω0 * dt + sqrt(2Dr * dt)randn()
     
         runLogger!(logger, p, i, para::Parameter)
     end
