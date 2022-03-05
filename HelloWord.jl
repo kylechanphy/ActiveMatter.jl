@@ -1,1 +1,0 @@
-print("hello word!\n$(@__DIR__)" )
