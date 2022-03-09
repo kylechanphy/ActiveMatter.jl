@@ -10,8 +10,7 @@ export
     TriangularLattice
 
 
-
-
+    
 """
 Free FreeSpace
 """
@@ -24,6 +23,7 @@ function fold(pos::SV, ob::FreeSpace)
     return pos
 
 end
+
 
 """
 Square Lattice 
