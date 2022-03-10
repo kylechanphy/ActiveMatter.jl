@@ -54,7 +54,7 @@ function Langevin!(p::Particle, para::Parameter, inter::ObstacleCollision, logge
         #     @show norm(p.vel), p.collide
         # end
         hat_p = getHead(ϕ)
-        forces = v0 .* hat_p .+ vg
+        forces =  v0 .* hat_p .+ vg
     
         cell_du = cell_u0 .+ forces .* dt
         iscollided, collided_F = getCollsionForoce(cell_u0, cell_du, forces, cent_lst, ob)
@@ -87,21 +87,36 @@ function Langevin!(p::Particle, para::Parameter, inter::ObstacleCollision, logge
 end
 
 
-# function Langevin!(p::Particle, para::Parameter, inter::ObstacleCollision, logger)
-#     @unpack v0, flow, flow_dir, Dr, dt, n_step = para
-#     ob = inter.ob
-#     vg = flow * SV(cosd(flow_dir), sind(flow_dir))
 
-#     du = p.pos
-#     u0 = copy(du)
-#     ϕ = randn()*2π
-#     for i in 1:n_step
-#         du = u0 + v0*SV(cos(ϕ), sin(ϕ))
-#         u0, du = du, u0 
-#         k, pos =  getCollsionForoce(p,du,u0,ob)
-#         # @show pos
-#          p.pos = pos
-#         ϕ += rand()
-#     end
-# end
+function Langevin!(p::ChemoDroplet, para::Parameter, inter::Chemotaxis, logger)
+    @unpack v0, ω0, flow, flow_dir, Dr, dt, n_step = para
+    # ob = inter.ob
+    vg = flow * SV(cosd(flow_dir), sind(flow_dir))
+    # cent_lst = getCent_lst(ob)
+
+    u0 = p.pos
+    du = copy(u0)
+
+    # cell_du = copy(du)
+    # cell_u0 = copy(u0)
+
+    ϕ = atan(p.vel[2], p.vel[1])
+    getHead(ϕ) = SV(cos(ϕ), sin(ϕ))
+
+    ### initialize and pre-allocate logger size 
+    setLogger!(logger, para)
+
+    for i in 1:n_step
+        hat_p = getHead(ϕ)
+        forces = getChemoForce() + v0 .* hat_p .+ vg
+        
+        du = u0 .+ forces .* dt
+        u0, du = du, u0
+        p.pos = du
+    
+        ϕ += ω0 * dt + sqrt(2Dr * dt)randn()
+    
+        runLogger!(logger, p, i, para::Parameter)
+    end
+end
 
