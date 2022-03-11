@@ -90,16 +90,11 @@ end
 
 function Langevin!(p::ChemoDroplet, para::Parameter, inter::Chemotaxis, logger)
     @unpack v0, ω0, flow, flow_dir, Dr, dt, n_step = para
-    # ob = inter.ob
     vg = flow * SV(cosd(flow_dir), sind(flow_dir))
-    # cent_lst = getCent_lst(ob)
 
     u0 = p.pos
     du = copy(u0)
-
-    # cell_du = copy(du)
-    # cell_u0 = copy(u0)
-
+    dfield = copy(inter.field)
     ϕ = atan(p.vel[2], p.vel[1])
     getHead(ϕ) = SV(cos(ϕ), sin(ϕ))
 
@@ -108,8 +103,8 @@ function Langevin!(p::ChemoDroplet, para::Parameter, inter::Chemotaxis, logger)
 
     for i in 1:n_step
         hat_p = getHead(ϕ)
-        forces = getChemoForce() + v0 .* hat_p .+ vg
-        
+        forces = getChemotaxisForce(p, inter, para, dfield) + v0 .* hat_p .+ vg
+    
         du = u0 .+ forces .* dt
         u0, du = du, u0
         p.pos = du
