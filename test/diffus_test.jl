@@ -3,7 +3,8 @@ using Pkg
 Pkg.activate("./test")
 
 using BenchmarkTools
-
+using Parameters
+using Plots
 
 
 
@@ -65,3 +66,5 @@ t = ddt * dnt
 pic = plot(r, M[div(nx, 2), :], label = "simulation")
 plot!(pic, r, G(r .- r[div(nx, 2)], t) * dx * dy, c = :green, label = "theory")
 display(pic)
+
+println("--- all done ---")
