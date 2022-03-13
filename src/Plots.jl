@@ -42,13 +42,26 @@ function RecipesBase.plot(ob::SquareLattice, N, traj::AbstractArray)
 end
 
 
-
-
 function RecipesBase.plot(traj::Vector{SV})
     x = [v[1] for v in traj]
     y = [v[2] for v in traj]
 
     plt = plot( x, y, label = "")
+
+    return plt
+end
+
+
+function RecipesBase.plot(inter::Chemotaxis, para::Parameter, traj::Vector{SV})
+    field = inter.field
+    hmx = (0:para.nx) * (para.dx)
+    hmy = (0:para.ny) * (para.dy)
+    hm = heatmap(hmx, hmy, transpose(field), aspect_ratio=1)
+
+    x = [v[1] for v in traj]
+    y = [v[2] for v in traj]
+
+    plt = plot!(hm, x, y, label = "", c = :green)
 
     return plt
 end

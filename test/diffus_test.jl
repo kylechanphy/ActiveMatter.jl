@@ -12,7 +12,7 @@ default(show = true)
 function clfCondi(dx)
     dims = length(dx)
 
-    return prod(dx .^ 2) / ((dims + 0.2) * sum(dx .^ 2))
+    return prod(dx .^ 2) / ((2*dims + 0.2) * sum(dx .^ 2))
 end
 # ddt = clfCondi([dx, dy])
 # # ddt = dx^2 * dy^2 / ((2*dims + 0.1) * (dx^2 + dy^2))
@@ -31,11 +31,11 @@ dims = 2
 
     dx::Float64 = 0.5
     dy::Float64 = 0.5
-    nx::Int = 10
-    ny::Int = 10
+    nx::Int = 500
+    ny::Int = 500
 
-    ddt::Float64 = clfCondi([dx,dy])
-    dnt::Int = 0
+    ddt::Float64 = clfCondi([dx, dy])
+    dnt::Int = 1000
 end
 para = Para()
 
@@ -48,20 +48,20 @@ u0 = zeros(nx, ny)
 du = copy(u0)
 pos = [div(nx, 2) + 1, div(ny, 2) + 1] # coord 
 # u0[pos[1], pos[2]] = para.src
-pos = pos.*[dx,dy] + randn(2)*dx # physical
+pos = pos .* [dx, dy] + randn(2) * dx # physical
 
 
 println("simulation started")
 # @time M = diffusion(du, u0, μ, dx, dy, ddt, dnt, nx, ny)
-@time M = diffusion(du, u0, pos, para)
+@btime M = diffusion(du, u0, pos, para; srctype = "const_src")
 
 """Matrix in julia is colum based !!!  """
 # M = transpose(M)
-r = rx
-
-# G(r, t) = @. exp((-r^2) / (4D * t)) / (4π * D * t)^(dims / 2)
+# hm = heatmap(transpose(M), aspect_ratio = 1)
+# r = rx
+# # G(r, t) = @. exp((-r^2) / (4D * t)) / (4π * D * t)^(dims / 2)
 # t = ddt*dnt
-pic = plot(r, M[div(nx, 2)+1, :], label = "simulation")
+# pic = plot(r, M[div(nx, 2)+1, :], label = "simulation")
 # plot!(pic, r, G(r .- r[div(nx, 2)+1], t) * dx * dy, c = :green, label = "theory")
 # gui(pic)
-display(pic)
+# display(pic)

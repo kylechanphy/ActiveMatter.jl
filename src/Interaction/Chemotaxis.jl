@@ -6,59 +6,66 @@ using LoopVectorization
 mutable struct Chemotaxis{T} <: Interaction
     field::T
 end
-
 Chemotaxis(ndx::Int = 5, ndy::Int = 5) = Chemotaxis(zeros(ndx, ndy))
 
 
 
 function getChemotaxisForce(p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDroplet, du)
-    inter.field = diffusion(du, inter.field, p.pos, para)
-    force = getForce!(inter.field, p.pos, para)
+    inter.field = diffusion(du, inter.field, p, para)
+    force = getForce(inter.field, p.pos, para)*para.α
+    # return SV(0, 0)
     return force
 end
 
 
 
-function diffusion(du, u, pos, para)
+function diffusion(du, u, p, para)
     @unpack D, dx, dy, nx, ny, ddt, dnt = para
+    @unpack pos, src, srctype = p
 
     coord, ratio = kernel(pos, para)
-    spread!(u, coord, ratio, para)
-    for _ = 1:dnt
-        # coord, ratio = kernel(pos, para)
-        # spread!(u, coord, ratio, para)
-        gridUpdate!(du, u, pos, ddt, D, dx, dy, nx, ny)
-        # gridUpdate!(du, u, pos, para)
-        # @show pos
-        # coord, ratio = kernel(pos, para)
-        spread!(du, coord, ratio, para)
-        # du[pos[1],pos[2]] = 1
-        u, du = du, u
+    spread!(u, coord, ratio, src)
+    if srctype == "const_src"
+        for _ = 1:dnt
+            gridUpdate!(du, u, pos, ddt, D, dx, dy, nx, ny)
+            spread!(du, coord, ratio, src)
+            u, du = du, u
+        end
+        return u
+    
+    else
+        srctype == "free"
+        for _ = 1:dnt
+            gridUpdate!(du, u, pos, ddt, D, dx, dy, nx, ny)
+            u, du = du, u
+        end
+        # spread!(u, coord, ratio, src)
+        return u
     end
-    return u
 end
 
 function gridUpdate!(du, u, pos, dt, D, dx, dy, nx, ny)
-# function gridUpdate!(du, u, pos, para)
+    _dx2, _dy2 = 1/dx^2, 1/dy^2
     @tturbo for i in 2:nx-1
         # for i in 2:nx-1
         # @turbo for i in 2:nx-1
         for j in 2:ny-1
-            du[i, j] = u[i, j] + dt * D * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) / dx^2
+            du[i, j] = u[i, j] + dt * D * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) * _dx2
                                                      +
-                                                     (u[i, j+1] - 2 * u[i, j] + u[i, j-1]) / dy^2)
+                                                     (u[i, j+1] - 2 * u[i, j] + u[i, j-1]) * _dy2)
         end
     end
 end
 
 
 function getForce(field, pos, para)
-    coord, ratio = spread!(field, pos, para)
+    coord, ratio = kernel(pos, para)
     force = SV(0, 0)
     for i in eachindex(coord)
         force = force + ratio[i] * ∇(coord[i], field, para)
         # force = force +  ∇(coord[i], field, dx, dy)
     end
+    # return SV(0,0)
     return force
 end
 
@@ -77,36 +84,36 @@ function kernel(pos, para)
     dy = para.dy
     x, y = pos
     rx, ry = rem(x, dx), rem(y, dy)
-    ratio = [rx * ry,
-        (dx - rx) * ry,
-        (dx - rx) * (dy - ry),
-        rx * (dy - ry)]
+    ratio = SA[rx*ry,
+        (dx-rx)*ry,
+        (dx-rx)*(dy-ry),
+        rx*(dy-ry)]
 
-    ratio = (ratio ./ ((dx * dy)))
+    ratio = ratio ./ ((dx * dy))
     # @show ratio
-    for i in eachindex(ratio)
-        r = 1 / ratio[i]
+    ratio = 1 ./ ratio
+    for r in ratio
         # @show r
         if isinf(r)
-            ratio = [1.0, 0.0, 0.0, 0.0]
+            ratio = SA[1.0, 0.0, 0.0, 0.0]
             break
             # elseif r == 0
             #     ratio[i] = 1
-        else
-            ratio[i] = r
+            # else
+            #     ratio[i] = r
         end
     end
     ratio = ratio ./ sum(ratio)
-
+    # @show ratio
     i, j = Int(div(x, dx)), Int(div(y, dy))
     coord = SA[(i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)]
 
     return coord, ratio
 end
 
-function spread!(field, coord, ratio, para)
+function spread!(field, coord, ratio, src)
 
-    r = ratio * para.src
+    r = ratio .* src
     for k in eachindex(r)
         if r[k] != 0
             i,j = coord[k]

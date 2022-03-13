@@ -104,13 +104,16 @@ function Langevin!(p::ChemoDroplet, para::Parameter, inter::Chemotaxis, logger)
     for i in 1:n_step
         hat_p = getHead(ϕ)
         forces = getChemotaxisForce(p, inter, para, dfield) + v0 .* hat_p .+ vg
-    
+        p.force = forces
         du = u0 .+ forces .* dt
         u0, du = du, u0
         p.pos = du
     
         ϕ += ω0 * dt + sqrt(2Dr * dt)randn()
-    
+        # if i == n_step
+        #     coord, ratio = kernel(p.pos, para)
+        #     spread!(inter.field, coord, ratio, p.src)
+        # end
         runLogger!(logger, p, i, para::Parameter)
     end
 end
