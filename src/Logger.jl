@@ -3,7 +3,8 @@ export
     TimeLogger,
     TrajLogger,
     PosLogger,
-    CollideLogger
+    CollideLogger,
+    runLogger
 
 
 """

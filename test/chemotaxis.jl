@@ -1,6 +1,9 @@
 using Pkg
-Pkg.activate(".")
-include("../src/ActiveMatter.jl")
+Pkg.activate("./test")
+
+using ActiveMatter
+using Parameters
+using Plots
 
 v0 = 1
 lp = 1
@@ -10,7 +13,7 @@ srctype = "const_src"
 # srctype = "free"
 
 n_step = 1000
-dt = 0.005
+dt = 0.01
 # nx = (2v0*dt*n_step)/ (v0*dt)
 ny = nx = 2*n_step
 
@@ -39,5 +42,6 @@ end
 
 sys = sys = System(p, inter, para, logger)
 
-println("---simulation started---")
+println("--- simulation started ---")
 @time runSim(sys)
+println("--- all done ---")
