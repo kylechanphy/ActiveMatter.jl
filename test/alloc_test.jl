@@ -1,7 +1,8 @@
-using BenchmarkTools
 using Pkg
-Pkg.activate(".")
-include("../src/ActiveMatter.jl")
+Pkg.activate("./test")
+
+using BenchmarkTools
+using ActiveMatter
 
 
 d = 1
