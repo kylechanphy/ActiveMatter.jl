@@ -1,9 +1,10 @@
-# module ActiveMatter
+module ActiveMatter
 
 using LinearAlgebra
 using Plots
 using StaticArrays
 using Parameters
+using LoopVectorization
 const SV = SVector{2,Float64}
 
 include("types.jl")
@@ -17,5 +18,5 @@ include("Logger.jl")
 include("Analysis.jl")
 include("Plots.jl")
 
-# end
+end
 

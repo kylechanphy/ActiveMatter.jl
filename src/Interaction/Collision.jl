@@ -1,3 +1,6 @@
+export
+    ObstacleCollision
+    
 """
 Implement of collision between particles and obstacle.
 
@@ -20,9 +23,9 @@ function collide(cell_u0::SV, cell_du::SV, forces::SV, cent_lst, ob::ObstacleLat
             # @show c, dis
             N = c .- cell_u0
             # @show c, cell_du, p.cell_pos, cell_u0
-            N = N/norm(N)
+            N = N / norm(N)
             forces = -(forces ⋅ N) * N # noramal to collison surface
-        
+
             # return iscollided, forces
             break
         end

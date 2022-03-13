@@ -1,3 +1,10 @@
+export 
+    logging!,
+    TimeLogger,
+    TrajLogger,
+    PosLogger,
+    CollideLogger
+
 
 """
 pre-allocate the size of logger

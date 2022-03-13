@@ -3,10 +3,8 @@ Define the type of particles
 """
 
 export
-    SV,
-    AbstractParicles,
-    Particle
-
+    Particle,
+    ChemoDroplet
 
 ###
 

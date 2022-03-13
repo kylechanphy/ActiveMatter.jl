@@ -10,7 +10,9 @@ export
     Interaction,
     Parameter,
     System,
-    AbstractSystem
+    AbstractSystem,
+    SV,
+    CustomLogger
 ###
 abstract type AbstractParicles end
 abstract type ObstacleLattice end

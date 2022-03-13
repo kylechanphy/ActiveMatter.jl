@@ -1,8 +1,10 @@
-import Base.Threads.@threads, Base.Threads.@sync, Base.Threads.@spawn
-tid = Threads.threadid
-nth = Threads.nthreads()
 
-using LoopVectorization
+export
+    Chemotaxis,
+    diffusion
+"""
+
+"""
 mutable struct Chemotaxis{T} <: Interaction
     field::T
 end
@@ -12,7 +14,7 @@ Chemotaxis(ndx::Int = 5, ndy::Int = 5) = Chemotaxis(zeros(ndx, ndy))
 
 function getChemotaxisForce(p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDroplet, du)
     inter.field = diffusion(du, inter.field, p, para)
-    force = getForce(inter.field, p.pos, para)*para.α
+    force = getForce(inter.field, p.pos, para) * para.α
     # return SV(0, 0)
     return force
 end
@@ -32,7 +34,7 @@ function diffusion(du, u, p, para)
             u, du = du, u
         end
         return u
-    
+
     else
         srctype == "free"
         for _ = 1:dnt
@@ -45,14 +47,14 @@ function diffusion(du, u, p, para)
 end
 
 function gridUpdate!(du, u, pos, dt, D, dx, dy, nx, ny)
-    _dx2, _dy2 = 1/dx^2, 1/dy^2
+    _dx2, _dy2 = 1 / dx^2, 1 / dy^2
     @tturbo for i in 2:nx-1
         # for i in 2:nx-1
         # @turbo for i in 2:nx-1
         for j in 2:ny-1
             du[i, j] = u[i, j] + dt * D * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) * _dx2
-                                                     +
-                                                     (u[i, j+1] - 2 * u[i, j] + u[i, j-1]) * _dy2)
+                                           +
+                                           (u[i, j+1] - 2 * u[i, j] + u[i, j-1]) * _dy2)
         end
     end
 end
@@ -72,8 +74,8 @@ end
 
 function ∇(coord, field, para)
     x, y = coord
-    dx = (field[x+1,y] - field[x-1,y]) / (2para.dx)
-    dy = (field[x,y+1] - field[x,y-1]) / (2para.dy)
+    dx = (field[x+1, y] - field[x-1, y]) / (2para.dx)
+    dy = (field[x, y+1] - field[x, y-1]) / (2para.dy)
 
     return SV(dx, dy)
 end
@@ -116,8 +118,8 @@ function spread!(field, coord, ratio, src)
     r = ratio .* src
     for k in eachindex(r)
         if r[k] != 0
-            i,j = coord[k]
-            field[i,j] = r[k]
+            i, j = coord[k]
+            field[i, j] = r[k]
         end
     end
 end

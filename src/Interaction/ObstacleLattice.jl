@@ -1,7 +1,3 @@
-"""
-Define the geometry of obstacle lattices 
-"""
-
 
 export
     ObstacleLattice,
@@ -10,10 +6,14 @@ export
     TriangularLattice
 
 
+"""
+Define the geometry of obstacle lattices 
+"""
+
+
     
-"""
-Free FreeSpace
-"""
+"""Free FreeSpace"""
+
 struct FreeSpace <: ObstacleLattice
     d::Float64 # latice constant
     r::Float64 # radius of obstacle

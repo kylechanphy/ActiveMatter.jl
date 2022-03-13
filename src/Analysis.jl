@@ -1,3 +1,8 @@
+export
+    MSD,
+    slope,
+    DiffusConst
+
 """
 """
 function MSD(coord::AbstractArray)

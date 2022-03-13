@@ -1,3 +1,9 @@
+name = "ActiveMatter"
+uuid = "664a2c09-245e-4db7-8a2e-5b48f520caf2"
+authors = ["Kyle Chan <kylewingchan@gmail.com>"]
+version = "0.1.0"
+
+
 [deps]
 DiffEqOperators = "9fdde737-9c7f-55bf-ade8-46b3f136cc48"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
