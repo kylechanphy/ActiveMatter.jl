@@ -38,7 +38,8 @@ function runLogger!(loggers::Dict, p, step, para::Parameter; every::Bool = false
 end
 
 function runLogger!(loggers::CustomLogger, p, step, para::Parameter; every::Bool = false)
-    logging!(loggers, p::AbstractParicles, para, step)
+    loggers.log(loggers, p::AbstractParicles, para, step)
+    # logging!(loggers, p::AbstractParicles, para, step)
 end
 
 

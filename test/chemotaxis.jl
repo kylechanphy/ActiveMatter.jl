@@ -25,18 +25,21 @@ pos = SV(nx / 2, ny / 2) .* (para.dx, para.dy)
 p = ChemoDroplet(pos = pos, srctype = srctype, src = 1)
 inter = Chemotaxis(nx, ny)
 
+function logging!(logger::CustomLogger, p::ChemoDroplet, para::Parameter, step)
+    logger.coord[step] = p.pos
+    logger.F[step] = p.force
+    logger.t[step] = step * para.dt
+end
 n_take = para.n_step
 @with_kw mutable struct Logger <: CustomLogger
     coord::Vector{SV} = Vector{SV}(undef, n_take)
     F::Vector{SV} = Vector{SV}(undef, n_take)
     t::Vector{Float64} = Vector{Int}(undef, n_take)
+
+    log::Function = logging!
 end
 logger = Logger()
-function logging!(logger::CustomLogger, p::ChemoDroplet, para::Parameter, step)
-    logger.coord[step] = p.pos
-    logger.F[step] = p.force
-    logger.t[step] = step*para.dt
-end
+
 
 # loggers = Dict("traj" => TrajLogger())
 
