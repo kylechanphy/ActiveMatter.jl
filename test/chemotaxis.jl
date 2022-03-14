@@ -1,7 +1,10 @@
 using Pkg
-Pkg.activate("./test")
-
+Pkg.activate(".")
+# include("../src/ActiveMatter.jl")
 using ActiveMatter
+
+Pkg.activate("./test")
+using Revise
 using Parameters
 using Plots
 
@@ -12,14 +15,16 @@ r = 1
 srctype = "const_src"
 # srctype = "free"
 
-n_step = 1000
-dt = 0.01
+dt = 0.05*lp/v0
+n_step = 500
+# dt = 0.01
 # nx = (2v0*dt*n_step)/ (v0*dt)
-ny = nx = 2*n_step
+ny = nx =  n_step
 
 ω0 = v0 / r;
 Dr = v0 / lp;
-para = ParaChemoDroplet(nx = nx, ny = ny, ω0 = ω0, Dr = Dr)
+para = ParaChemoDroplet(dt = dt, nx = nx, ny = ny, ω0 = ω0, Dr = Dr, n_step = n_step)
+# para.α = 0
 
 pos = SV(nx / 2, ny / 2) .* (para.dx, para.dy)
 p = ChemoDroplet(pos = pos, srctype = srctype, src = 1)
@@ -41,10 +46,11 @@ end
 logger = Logger()
 
 
-# loggers = Dict("traj" => TrajLogger())
+loggers = Dict("traj" => TrajLogger())
 
 sys = sys = System(p, inter, para, logger)
 
 println("--- simulation started ---")
+@show sys.parameter
 @time runSim(sys)
 println("--- all done ---")

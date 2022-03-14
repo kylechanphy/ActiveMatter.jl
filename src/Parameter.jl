@@ -39,7 +39,7 @@ end
     nt::Int = 1
     n_step::Int = 1000
 
-    α::Float64 = 0.001
+    α::Float64 = -0.001
 
     ### field parameter
     D::Float64 = 1
