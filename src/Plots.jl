@@ -1,13 +1,15 @@
 export
     plot
+    # makeMoive
 
 ###
+import GLMakie as gl
 circle(R, x, y) = (θ = LinRange(0, 2π, 30);
-                   (x .+ R .* cos.(θ), y .+ R .* sin.(θ)))
+(x .+ R .* cos.(θ), y .+ R .* sin.(θ)))
 ###            
 
 
-function RecipesBase.plot(ob::SquareLattice, N=4)
+function RecipesBase.plot(ob::SquareLattice, N = 4)
     d = ob.d
     R = ob.r
     # N = N+1
@@ -19,7 +21,7 @@ function RecipesBase.plot(ob::SquareLattice, N=4)
     x = reshape(x, (1, length(x)))
     y = reshape(y, (1, length(y)))
     plt = plot(circle(R, x, y), c = :red, alpha = 0.3,
-        xlim = (-N * d + d/2, N * d+ d/2 ), ylim = (-N * d + d/2,  N * d + d/2),
+        xlim = (-N * d + d / 2, N * d + d / 2), ylim = (-N * d + d / 2, N * d + d / 2),
         axis = nothing,
         aspect_ratio = :equal, label = "")
 
@@ -46,7 +48,7 @@ function RecipesBase.plot(traj::Vector{SV})
     x = [v[1] for v in traj]
     y = [v[2] for v in traj]
 
-    plt = plot( x, y, label = "")
+    plt = plot(x, y, label = "")
 
     return plt
 end
@@ -56,7 +58,7 @@ function RecipesBase.plot(inter::Chemotaxis, para::Parameter, traj::Vector{SV})
     field = inter.field
     hmx = (0:para.nx) * (para.dx)
     hmy = (0:para.ny) * (para.dy)
-    hm = heatmap(hmx, hmy, transpose(field), aspect_ratio=1)
+    hm = heatmap(hmx, hmy, transpose(field), aspect_ratio = 1)
 
     x = [v[1] for v in traj]
     y = [v[2] for v in traj]
@@ -65,3 +67,32 @@ function RecipesBase.plot(inter::Chemotaxis, para::Parameter, traj::Vector{SV})
 
     return plt
 end
+
+function RecipesBase.plot(field::Matrix{Float64}, para::Parameter)
+    hmx = (0:para.nx-1) * (para.dx)
+    hmy = (0:para.ny-1) * (para.dy)
+    hm = heatmap(hmx, hmy, transpose(field), aspect_ratio = 1)
+
+
+    return hm
+end
+
+
+# function makeMoive(inter::Chemotaxis, para, traj::Vector{SV3})
+#     set_theme!(theme_black())
+
+#     fig, ax, l = lines(points, color = colors,
+#         colormap = :inferno, transparency = true,
+#         axis = (; type = Axis3, protrusions = (0, 0, 0, 0),
+#             viewmode = :fit, limits = (-30, 30, -30, 30, 0, 50)))
+
+#     record(fig, "test.mp4", 1:120) do frame
+#         for i in 1:50
+#             # push!(points[], step!(attractor))
+#             # push!(colors[], frame)
+#         end
+#         # ax.azimuth[] = 1.7pi + 0.3 * sin(2pi * frame / 120)
+#         notify.(traj)
+#         l.colorrange = (0, frame)
+#     end
+# end

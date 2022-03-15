@@ -12,6 +12,7 @@ export
     System,
     AbstractSystem,
     SV,
+    SV3,
     CustomLogger
 ###
 abstract type AbstractParicles end
@@ -21,6 +22,9 @@ abstract type Parameter end
 abstract type AbstractSystem end
 abstract type AbstractLogger end
 abstract type CustomLogger <: AbstractLogger end
+
+const SV = SVector{2,Float64}
+const SV3 = SVector{3,Float64}
 
 """
 System interface

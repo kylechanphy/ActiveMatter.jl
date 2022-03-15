@@ -1,10 +1,17 @@
 
 export
     Chemotaxis,
-    diffusion
+    diffusion,
+    spread!,
+    kernel,
+    kernel2
+
 """
 
 """
+# mutable struct Chemotaxis{T} <: Interaction
+#     field::T
+# end
 mutable struct Chemotaxis{T} <: Interaction
     field::T
 end
@@ -21,7 +28,7 @@ end
 
 
 
-function diffusion(du, u, p, para)
+function diffusion(du::Matrix{Float64}, u, p, para)
     @unpack D, dx, dy, nx, ny, ddt, dnt = para
     @unpack pos, src, srctype = p
 
@@ -60,7 +67,9 @@ function gridUpdate!(du, u, pos, dt, D, dx, dy, nx, ny)
 end
 
 
-function getForce(field, pos, para)
+
+
+function getForce(field, pos::SV, para)
     coord, ratio = kernel(pos, para)
     force = SV(0, 0)
     for i in eachindex(coord)
@@ -72,7 +81,7 @@ function getForce(field, pos, para)
 end
 
 
-function ∇(coord, field, para)
+function ∇(coord::Tuple{Int64,Int64}, field, para)
     x, y = coord
     dx = (field[x+1, y] - field[x-1, y]) / (2para.dx)
     dy = (field[x, y+1] - field[x, y-1]) / (2para.dy)
@@ -81,39 +90,59 @@ function ∇(coord, field, para)
 end
 
 
-function kernel(pos, para)
+# function kernel(pos::SV, para)
+#     dx = para.dx
+#     dy = para.dy
+#     x, y = pos
+#     rx, ry = rem(x, dx), rem(y, dy)
+#     ratio = SA[rx*ry,
+#         (dx-rx)*ry,
+#         (dx-rx)*(dy-ry),
+#         rx*(dy-ry)]
+
+#     ratio = ratio ./ ((dx * dy))
+#     # @show sum(ratio)
+#     # @show ratio
+#     ratio = 1 ./ ratio
+#     for r in ratio
+#         # @show r
+#         if isinf(r)
+#             ratio = SA[1.0, 0.0, 0.0, 0.0]
+#             break
+#         end
+#     end
+#     ratio = ratio ./ sum(ratio)
+#     # @show ratio
+#     i, j = Int(div(x, dx)) + 1, Int(div(y, dy)) + 1
+#     coord = SA[(i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)]
+
+#     return coord, ratio
+# end
+
+
+
+function kernel(pos::SV, para)
     dx = para.dx
     dy = para.dy
     x, y = pos
     rx, ry = rem(x, dx), rem(y, dy)
-    ratio = SA[rx*ry,
+    Ai = SA[rx*ry,
         (dx-rx)*ry,
         (dx-rx)*(dy-ry),
         rx*(dy-ry)]
 
-    ratio = ratio ./ ((dx * dy))
+    A = dx * dy
+    ratio = SA[A, A, A, A] .- Ai
+    ratio = ratio ./ (3 * A)
+
     # @show ratio
-    ratio = 1 ./ ratio
-    for r in ratio
-        # @show r
-        if isinf(r)
-            ratio = SA[1.0, 0.0, 0.0, 0.0]
-            break
-            # elseif r == 0
-            #     ratio[i] = 1
-            # else
-            #     ratio[i] = r
-        end
-    end
-    ratio = ratio ./ sum(ratio)
-    # @show ratio
-    i, j = Int(div(x, dx)), Int(div(y, dy))
+    i, j = Int(div(x, dx)) + 1, Int(div(y, dy)) + 1
     coord = SA[(i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)]
 
     return coord, ratio
 end
 
-function spread!(field, coord, ratio, src)
+function spread!(field, coord, ratio::SVector{4,Float64}, src)
 
     r = ratio .* src
     for k in eachindex(r)
