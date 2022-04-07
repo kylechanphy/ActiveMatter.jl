@@ -6,7 +6,6 @@ export
 
 """
 
-
 # @with_kw mutable struct Chemotaxis{T} <: Interaction
 #     field::T = zeros(3,3)
 # end
@@ -15,7 +14,6 @@ Chemotaxis3D(ndx::Int=5, ndy::Int=5, ndz::Int=5) = Chemotaxis(zeros(ndx,ndy,ndz)
 #     h = SharedArray{Float64,3}((ndx, ndy, ndz))
 #     return Chemotaxis(h)
 # end
-
 
 function getChemotaxisForce(p::ChemoDroplet3D, inter::Chemotaxis, para::ParaChemoDroplet, du)
     inter.field = diffusion2(du, inter.field, p, para)
@@ -73,11 +71,29 @@ function gridUpdate3D!(du, u, pos, dt, D, dx, dy, dz, nx, ny, nz)
     end
 end
 
+# function gridUpdateAdvection3D!(du, u, pos, vel, dt, D, dx, dy, dz, nx, ny, nz, ff)
+#     _dx2, _dy2, _dz2 = 1 / dx^2, 1 / dy^2, 1 / dz^2
+#     _dx, _dy, _dz = 1 / dx, 1 / dy, 1 / dz
+#     for i in 2:nx-1
+#         @tturbo for j in 2:ny-1
+#             for k in 2:nz-1
+#                 du[i, j, k] = u[i, j, k] + dt * (D * (u[i+1, j, k] - 2 * u[i, j, k] + u[i-1, j, k]) * _dx2 - (u[i+1, j, k] - u[i-1, j, k]) * (-vel[1] * _dx) * ff[i, j, k]
+#                                                  +
+#                                                  D * (u[i, j+1, k] - 2 * u[i, j, k] + u[i, j-1, k]) * _dy2 - (u[i, j+1, k] - u[i, j-1, k]) * (-vel[2] * _dy) * ff[i, j, k]
+#                                                  +
+#                                                  D * (u[i, j, k+1] - 2 * u[i, j, k] + u[i, j, k-1]) * _dz2 - (u[i, j, k+1] - u[i, j, k-1]) * (-vel[3] * _dz) * ff[i, j, k])
+    
+    
+#             end
+#         end
+#     end
+# end
+
 function gridUpdateAdvection3D!(du, u, pos, vel, dt, D, dx, dy, dz, nx, ny, nz, ff)
     _dx2, _dy2, _dz2 = 1 / dx^2, 1 / dy^2, 1 / dz^2
     _dx, _dy, _dz = 1 / dx, 1 / dy, 1 / dz
     for i in 2:nx-1
-        @tturbo for j in 2:ny-1
+       for j in 2:ny-1
             for k in 2:nz-1
                 du[i, j, k] = u[i, j, k] + dt * (D * (u[i+1, j, k] - 2 * u[i, j, k] + u[i-1, j, k]) * _dx2 - (u[i+1, j, k] - u[i-1, j, k]) * (-vel[1] * _dx) * ff[i, j, k]
                                                  +
@@ -90,26 +106,6 @@ function gridUpdateAdvection3D!(du, u, pos, vel, dt, D, dx, dy, dz, nx, ny, nz, 
         end
     end
 end
-
-# function gridUpdateAdvection3D!(du, u, pos, vel, dt, D, dx, dy, dz, nx, ny, nz, ff)
-#     _dx2, _dy2, _dz2 = 1 / dx^2, 1 / dy^2, 1 / dz^2
-#     _dx, _dy, _dz = 1 / dx, 1 / dy, 1 / dz
-#     @sync @distributed for i in 2:nx-1
-#         # @sync @distributed for j in 2:ny-1
-#         for j in 2:ny-1
-#             for k in 2:nz-1
-#                 du[i, j, k] = u[i, j, k] + dt * (D * (u[i+1, j, k] - 2 * u[i, j, k] + u[i-1, j, k]) * _dx2 - (u[i+1, j, k] - u[i-1, j, k]) * (-vel[1] * _dx) * ff[i, j, k]
-#                                                  +
-#                                                  D * (u[i, j+1, k] - 2 * u[i, j, k] + u[i, j-1, k]) * _dy2 - (u[i, j+1, k] - u[i, j-1, k]) * (-vel[2] * _dy) * ff[i, j, k]
-#                                                  +
-#                                                  D * (u[i, j, k+1] - 2 * u[i, j, k] + u[i, j, k-1]) * _dz2 - (u[i, j, k+1] - u[i, j, k-1]) * (-vel[3] * _dz) * ff[i, j, k])
-
-
-#             end
-#         end
-#     end
-# end
-
 
 function farfield3D(field, pos)
     nx, ny, nz = size(field)
