@@ -39,7 +39,7 @@ end
     nt::Int = 1
     n_step::Int = 100
 
-    α::Float64 = -0.001
+    α::Float64 = -1
 
     ### field parameter
     D::Float64 = 1
@@ -48,6 +48,10 @@ end
     dy::Float64 = v0 * dt
     dz::Float64 = v0 * dt
 
+    # dx::Float64 = 0.005
+    # dy::Float64 = 0.005
+    # dz::Float64 = 0.005
+    
     nx::Int = 100
     ny::Int = 100
     nz::Int = 100

@@ -25,7 +25,9 @@ function setLogger!(loggers::AbstractArray, para::Parameter; every::Bool = false
     loggers[i] = preAllocate(loggers[i], para.n_step)
     end
 end
-
+function setLogger!(loggers::NTuple, para::Parameter; every::Bool=false)
+    nothing
+end
 
 
 """
