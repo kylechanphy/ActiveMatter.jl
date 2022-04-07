@@ -127,32 +127,33 @@ end
 
 function Langevin3D!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logger)
     @unpack v0, ω0, flow, flow_dir, Dr, dt, n_step = para
-    # vg = flow * SV3(cosd(flow_dir), sind(flow_dir))
-    vg = SV3(0,0,0)
+    # vg = flow * SV(cosd(flow_dir), sind(flow_dir))
 
     u0 = p.pos
     du = copy(u0)
     dfield = copy(inter.field)
     ϕ = atan(p.vel[2], p.vel[1])
-    getHead(ϕ) = SV3(cos(ϕ), sin(ϕ), 0)
+    getHead(ϕ) = SV3(cos(ϕ), sin(ϕ), 1)
 
     ### initialize and pre-allocate logger size 
     setLogger!(logger, para)
-
     for i in 1:n_step
         hat_p = getHead(ϕ)
-        forces = getChemotaxisForce(p, inter, para, dfield) + v0 .* hat_p .+ vg
-        p.force = forces
+        chemforce = getChemotaxisForce(p, inter, para, dfield)
+        forces = chemforce + v0 .* hat_p
+        # forces = chemforce 
+        p.vel = forces
+        # if i==1 
+        #     forces += rand(2)
+        # end
+        p.force = chemforce
         du = u0 .+ forces .* dt
         u0, du = du, u0
-        p.pos = du
+        p.pos = u0
 
         ϕ += ω0 * dt + sqrt(2Dr * dt)randn()
-        # if i == n_step
-        #     coord, ratio = kernel(p.pos, para)
-        #     spread!(inter.field, coord, ratio, p.src)
-        # end
-        runLogger!(logger, p, i, para::Parameter)
+
+        runLogger!(logger, p, i, para::Parameter, inter)
     end
 end
 

@@ -53,6 +53,16 @@ function RecipesBase.plot(traj::Vector{SV})
     return plt
 end
 
+function RecipesBase.plot(traj::Vector{SV3})
+    x = [v[1] for v in traj]
+    y = [v[2] for v in traj]
+    z = [v[2] for v in traj]
+
+    plt = plot(x, y, z, label="")
+
+    return plt
+end
+
 function RecipesBase.plot(field::Matrix{Float64}, para::Parameter)
     hmx = (0:para.nx-1) * (para.dx)
     hmy = (0:para.ny-1) * (para.dy)

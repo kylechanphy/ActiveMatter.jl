@@ -12,13 +12,13 @@ export
 """
 
 """
-# mutable struct Chemotaxis{T} <: Interaction
-#     field::T
-# end
+
 mutable struct Chemotaxis{T} <: Interaction
     field::T
 end
 Chemotaxis(ndx::Int = 5, ndy::Int = 5) = Chemotaxis(zeros(ndx, ndy))
+# function Chemotaxis(ndx::Int = 5, ndy::Int = 5)
+#      h = 
 
 
 
