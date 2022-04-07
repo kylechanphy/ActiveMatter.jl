@@ -56,20 +56,20 @@ function diffusion2(du::Array{Float64,3}, u, p, para)
     end
 end
 
-function gridUpdate3D!(du, u, pos, dt, D, dx, dy, dz, nx, ny, nz)
-    _dx2, _dy2, _dz2 = 1 / dx^2, 1 / dy^2, 1 / dz^2
-    @tturbo for k in 2:nx-1
-        for i in 2:ny-1
-            for j in 2:nz-1
-                du[k, i, j] = u[k, i, j] + dt * D * ((u[k, i+1, j] - 2 * u[k, i, j] + u[k, i-1, j]) * _dx2
-                                                        +
-                                                        (u[k, i, j+1] - 2 * u[k, i, j] + u[k, i, j-1]) * _dy2
-                                                        +
-                                                        (u[k+1, i, j] - 2 * u[k, i, j] + u[k-1, i, j]) * _dz2)
-            end
-        end
-    end
-end
+# function gridUpdate3D!(du, u, pos, dt, D, dx, dy, dz, nx, ny, nz)
+#     _dx2, _dy2, _dz2 = 1 / dx^2, 1 / dy^2, 1 / dz^2
+#     @tturbo for k in 2:nx-1
+#         for i in 2:ny-1
+#             for j in 2:nz-1
+#                 du[k, i, j] = u[k, i, j] + dt * D * ((u[k, i+1, j] - 2 * u[k, i, j] + u[k, i-1, j]) * _dx2
+#                                                         +
+#                                                         (u[k, i, j+1] - 2 * u[k, i, j] + u[k, i, j-1]) * _dy2
+#                                                         +
+#                                                         (u[k+1, i, j] - 2 * u[k, i, j] + u[k-1, i, j]) * _dz2)
+#             end
+#         end
+#     end
+# end
 
 # function gridUpdateAdvection3D!(du, u, pos, vel, dt, D, dx, dy, dz, nx, ny, nz, ff)
 #     _dx2, _dy2, _dz2 = 1 / dx^2, 1 / dy^2, 1 / dz^2

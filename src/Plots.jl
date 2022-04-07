@@ -3,7 +3,6 @@ export
     # makeMoive
 
 ###
-import GLMakie as gl
 circle(R, x, y) = (θ = LinRange(0, 2π, 30);
 (x .+ R .* cos.(θ), y .+ R .* sin.(θ)))
 ###            
