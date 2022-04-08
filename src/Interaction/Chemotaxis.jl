@@ -138,41 +138,41 @@ function gridUpdateAdvection!(du, u, pos, vel, dt, D, dx, dy, nx, ny, ff)
     _dx2, _dy2 = 1 / dx^2, 1 / dy^2
     _dx, _dy = 1 / dx, 1 / dy
     @tturbo for i in 2:nx-1
-    # for i in 2:nx-1
-        for j in 2:ny-1
-            du[i, j] = u[i, j] + dt *   (D*(u[i+1, j] - 2 * u[i, j] + u[i-1, j]) * _dx2 - (u[i+1,j] - u[i-1,j])*(-vel[1]*_dx)*ff[i,j]
-                                           +
-                                           D*(u[i, j+1] - 2 * u[i, j] + u[i, j-1]) * _dy2 - (u[i, j+1] - u[i,j-1])*(-vel[2]*_dy)*ff[i,j] )
-            # # diffusion
-            # new = D * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) * _dx2
-            #            +
-            #            (u[i, j+1] - 2 * u[i, j] + u[i, j-1]) * _dy2)
-        
-            # # advection
-            # new = @. new - (ff[i, j]) * ((u[i+1, j] - u[i-1, j]) * _dx * (-vel[1])
-            #                              +
-            #                              (u[i, j+1] - u[i, j-1]) * _dy * (-vel[2]))
-        
-            # du[i, j] = u[i, j] + new * dt
-            # # du[ii, jj] = src
-        
-        
-            # diffusion
-            # du[i, j] = u[i, j] + dt * D * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) * _dx2
-            #                           +
-            #                           (u[i, j+1] - 2 * u[i, j] + u[i, j-1]) * _dy2)
-        
-            #                     -  
-            #                     # advection               
-            #                     ff[i,j] * dt * ((u[i+1, j] - u[i-1, j]) * _dx * (-vel[1])
-            #                         +
-            #                         (u[i, j+1] - u[i, j-1]) * _dy * (-vel[2]))
-        
-            # du[i, j] = u[i, j] + new * dt
-            # du[ii, jj] = src
-        
-        end
-    end
+#    Threads.@threads for i in 2:nx-1
+       for j in 2:ny-1
+           du[i, j] = u[i, j] + dt * (D * (u[i+1, j] - 2 * u[i, j] + u[i-1, j]) * _dx2 - (u[i+1, j] - u[i-1, j]) * (-vel[1] * _dx) * ff[i, j]
+                                      +
+                                      D * (u[i, j+1] - 2 * u[i, j] + u[i, j-1]) * _dy2 - (u[i, j+1] - u[i, j-1]) * (-vel[2] * _dy) * ff[i, j])
+           # # diffusion
+           # new = D * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) * _dx2
+           #            +
+           #            (u[i, j+1] - 2 * u[i, j] + u[i, j-1]) * _dy2)
+   
+           # # advection
+           # new = @. new - (ff[i, j]) * ((u[i+1, j] - u[i-1, j]) * _dx * (-vel[1])
+           #                              +
+           #                              (u[i, j+1] - u[i, j-1]) * _dy * (-vel[2]))
+   
+           # du[i, j] = u[i, j] + new * dt
+           # # du[ii, jj] = src
+   
+   
+           # diffusion
+           # du[i, j] = u[i, j] + dt * D * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) * _dx2
+           #                           +
+           #                           (u[i, j+1] - 2 * u[i, j] + u[i, j-1]) * _dy2)
+   
+           #                     -  
+           #                     # advection               
+           #                     ff[i,j] * dt * ((u[i+1, j] - u[i-1, j]) * _dx * (-vel[1])
+           #                         +
+           #                         (u[i, j+1] - u[i, j-1]) * _dy * (-vel[2]))
+   
+           # du[i, j] = u[i, j] + new * dt
+           # du[ii, jj] = src
+   
+       end
+   end
 end
 
 function gridUpdate!(du, u, pos, dt, D, dx, dy, nx, ny)

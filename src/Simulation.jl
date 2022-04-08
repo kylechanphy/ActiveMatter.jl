@@ -3,8 +3,8 @@ Implement of simulation
 """
 
 export
-    runSim
-
+    runSim,
+    runtest
 
 
 ###
@@ -20,6 +20,17 @@ function runSim(s::System)
         Langevin3D!(p, para, inter, logger)
     end
 end
+
+function runtest(s::System)
+    p = s.particles
+    para = s.parameter
+    inter = s.interactions
+    logger = s.loggers
+    # dims = length(p.pos)
+    testrun(p, para, inter, logger)
+
+end
+
 
 
 # single particle system / non- interacting particles system
@@ -108,6 +119,7 @@ function Langevin!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logg
         hat_p = getHead(ϕ)
         chemforce = getChemotaxisForce(p, inter, para, dfield)
         forces = chemforce + v0 .* hat_p .+ vg
+        # forces = 0
         # forces = chemforce 
         p.vel = forces
         # if i==1 
@@ -132,28 +144,36 @@ function Langevin3D!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, lo
     u0 = p.pos
     du = copy(u0)
     dfield = copy(inter.field)
+    ffield = copy(dfield)
     ϕ = atan(p.vel[2], p.vel[1])
     getHead(ϕ) = SV3(cos(ϕ), sin(ϕ), 1)
 
     ### initialize and pre-allocate logger size 
     setLogger!(logger, para)
+    # println("hi")
     for i in 1:n_step
         hat_p = getHead(ϕ)
-        chemforce = getChemotaxisForce(p, inter, para, dfield)
-        forces = chemforce + v0 .* hat_p
+        chemforce = getChemotaxisForce(p, inter, para, dfield, ffield)
+        forces = chemforce .+ v0 .* hat_p
         # forces = chemforce 
         p.vel = forces
-        # if i==1 
-        #     forces += rand(2)
-        # end
         p.force = chemforce
+
         du = u0 .+ forces .* dt
         u0, du = du, u0
         p.pos = u0
-
+    
         ϕ += ω0 * dt + sqrt(2Dr * dt)randn()
-
+    
         runLogger!(logger, p, i, para::Parameter, inter)
     end
 end
 
+function testrun(p::ChemoDroplet3D, para::Parameter, inter::Chemotaxis, logger)
+    dfield = copy(inter.field)
+    ff = copy(dfield)
+    for _ in 1:10
+        getChemotaxisForce(p, inter, para, dfield, ff)
+
+    end
+end
