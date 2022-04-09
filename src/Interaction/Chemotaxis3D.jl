@@ -109,18 +109,18 @@ function gridUpdateAdvection3D!(du, u, pos, vel, dt, D, dx, dy, dz, nx, ny, nz, 
         end
 end
 
-function farfield3D(field, pos)
-    nx, ny, nz = size(field)
-    for i in 2:nx-1
-        for j in 2:ny-1
-            for k in 2:nz-1
-                field[i, j, k] = (norm(pos .- SA[i, j, k]))^-2
-            end
-        end
-    end
-    field[pos[1], pos[2], pos[3]] = 1
-    return field
-end
+# function farfield3D(field, pos)
+#     nx, ny, nz = size(field)
+#     for i in 2:nx-1
+#         for j in 2:ny-1
+#             for k in 2:nz-1
+#                 field[i, j, k] = (norm(pos .- SA[i, j, k]))^-2
+#             end
+#         end
+#     end
+#     field[pos[1], pos[2], pos[3]] = 1
+#     return field
+# end
 
 function farfield3D!(field, pos)
     nx, ny, nz = size(field)
