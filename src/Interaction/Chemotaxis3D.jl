@@ -163,7 +163,7 @@ function ∇(coord::Tuple{Int64,Int64,Int64}, field, para)
     x, y, z = coord
     dx = (field[x+1, y, z] - field[x-1, y, z]) / (2para.dx)
     dy = (field[x, y+1, z] - field[x, y-1, z]) / (2para.dy)
-    dz = (field[x, y, z+1] - field[z, y, z+1]) / (2para.dz)
+    dz = (field[x, y, z+1] - field[x, y, z+1]) / (2para.dz)
     return SV3(dx, dy, dz)
 end
 

@@ -55,7 +55,7 @@ end
 function RecipesBase.plot(traj::Vector{SV3})
     x = [v[1] for v in traj]
     y = [v[2] for v in traj]
-    z = [v[2] for v in traj]
+    z = [v[3] for v in traj]
 
     plt = plot(x, y, z, label="")
 

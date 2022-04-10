@@ -153,6 +153,7 @@ function Langevin3D!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, lo
     # println("hi")
     for i in 1:n_step
         hat_p = getHead(ϕ)
+        @show i
         @time chemforce = getChemotaxisForce(p, inter, para, dfield, ffield)
         forces = chemforce .+ v0 .* hat_p
         # forces = chemforce 
