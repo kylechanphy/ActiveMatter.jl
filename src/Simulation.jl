@@ -108,7 +108,10 @@ function Langevin!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logg
     vg = flow * SV(cosd(flow_dir), sind(flow_dir))
 
     u0 = p.pos
+    u0_fold = p.pos_fold
+
     du = copy(u0)
+    du_fold = copy(u0_fold)
 
     vel0 = p.vel
     dvel = copy(vel0)
@@ -137,10 +140,10 @@ function Langevin!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logg
         forces = chemforce + v0 .* hat_p .+ vg
         # forces = chemforce + SA[v0,v0]
     
-        if v0 == 0 && i == 2
-            forces = +SV(0, v00)
-            @show forces
-        end
+        # if v0 == 0 && i == 2
+        #     forces = +SV(0, v00)
+        #     @show forces
+        # end
         # forces = 0
         # forces = chemforce 
         dvel = forces
@@ -156,15 +159,18 @@ function Langevin!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logg
     
         p.vel = dvel
         dvel, vel0 = vel0, dvel
-
+    
         p.force = chemforce
         du = u0 .+ forces .* dt
-        du = periodicbound(du, para)
+        du_fold = periodicbound(du, para)
+        # du = periodicbound(du, para)
         # du = u0
     
     
         u0, du = du, u0
+        u0_fold, du_fold = du_fold, u0_fold
         p.pos = u0
+        p.pos_fold = u0_fold
     
         ϕ += ω0 * dt + sqrt(2Dr * dt)randn()
     

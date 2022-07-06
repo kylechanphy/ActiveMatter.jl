@@ -51,16 +51,17 @@ end
 # end
 """--------------------------------"""
 
-function getChemotaxisForce(p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDroplet, du)
-    inter.field, inter.flow = diffusion3(du, inter, p, para)
-    force = getForce2(inter.field, p.pos, para) * para.α
+function getChemotaxisForce(p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDroplet, dfield)
+    inter.field, inter.flow = diffusion3(dfield, inter, p, para)
+    force = getForce2(inter.field, p.pos_fold, para) * para.α
     # return SV(0, 0)
     return force, inter.flow
 end
 
 function diffusion3(du::Matrix{Float64}, inter, p, para)
     @unpack D, dx, dy, nx, ny, ddt, dnt = para
-    @unpack pos, vel, ω, src, srctype = p
+    @unpack pos_fold, vel, ω, src, srctype = p
+    pos = pos_fold
     u = inter.field
     # ff =  copy(inter.flow)
     # ff = copy(flow)
@@ -106,62 +107,13 @@ function diffusion3(du::Matrix{Float64}, inter, p, para)
     # end
 end
 
-function diffusion2(du::Matrix{Float64}, u, p, para)
-    @unpack D, dx, dy, nx, ny, ddt, dnt = para
-    @unpack pos, src, srctype = p
-
-    # coord, ratio = kernel(pos, para)
-    ii, jj = Int.(round.(pos ./ SA[para.dx, para.dy])) .+ 1
-    du[ii, jj] = src
-    # spread!(u, coord, ratio, src)
-    if srctype == "const_src"
-        for _ = 1:dnt
-            gridUpdate!(du, u, pos, ddt, D, dx, dy, nx, ny)
-            # spread!(du, coord, ratio, src)
-            du[ii, jj] = src
-            u, du = du, u
-        end
-        return u
-
-    else
-        srctype == "free"
-        for _ = 1:dnt
-            gridUpdate!(du, u, pos, ddt, D, dx, dy, nx, ny)
-            u, du = du, u
-        end
-        # spread!(u, coord, ratio, src)
-        return u
-    end
-end
-
-function diffusion(du::Matrix{Float64}, u, p, para)
-    @unpack D, dx, dy, nx, ny, ddt, dnt = para
-    if srctype == "const_src"
-        for _ = 1:dnt
-            gridUpdate!(du, u, pos, ddt, D, dx, dy, nx, ny)
-            spread!(du, coord, ratio, src)
-            u, du = du, u
-        end
-        return u
-
-    else
-        srctype == "free"
-        for _ = 1:dnt
-            gridUpdate!(du, u, pos, ddt, D, dx, dy, nx, ny)
-            u, du = du, u
-        end
-        # spread!(u, coord, ratio, src)
-        return u
-    end
-end
-
 function gridUpdateAdvection!(du, u, pos, vel, dt, D, dx, dy, nx, ny, ff)
     _dx2, _dy2 = 1 / dx^2, 1 / dy^2
     _dx, _dy = 1 / dx, 1 / dy
     x, y = pos
     flux = 1
     # 2d 
-    flux = flux /2
+    flux = flux / 2
     # @tturbo for i in 2:nx-1
     # if x == nx || y == ny
     #     @show x,y
@@ -237,21 +189,6 @@ function periodicbound!(du, u, D, ff, dt, nx, ny, _dx, _dx2, _dy, _dy2)
     end
 end
 
-
-
-function gridUpdate!(du, u, pos, dt, D, dx, dy, nx, ny)
-    _dx2, _dy2 = 1 / dx^2, 1 / dy^2
-    @tturbo for i in 2:nx-1
-        # for i in 2:nx-1
-        # @turbo for i in 2:nx-1
-        for j in 2:ny-1
-
-            du[i, j] = u[i, j] + dt * D * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) * _dx2
-                                           +
-                                           (u[i, j+1] - 2 * u[i, j] + u[i, j-1]) * _dy2)
-        end
-    end
-end
 
 
 function getForce2(field, pos::SV, para)
@@ -348,21 +285,21 @@ function farfield2(field, pos, v, ω, dx, dy)
     # pos = periodicbound(pos, dx, dy, nx, ny)
 
     Threads.@threads for i in 2:nx-1
-    for j in 2:ny-1
-        # p = (SA[i, j] .- 1) .* SA[dx, dy]
-        # p = periodicbound(p, dx, dy, nx, ny)
+        for j in 2:ny-1
+            # p = (SA[i, j] .- 1) .* SA[dx, dy]
+            # p = periodicbound(p, dx, dy, nx, ny)
 
-        p = SA[i, j]
+            p = SA[i, j]
 
-        # field[i][j] = dipole2D(v, pos, p) + f_dipole(v, pos, p) + rotlet(v, pos, p)
-        # field[i][j] = dipole2D(v, pos, p) + f_dipole(v, pos, p)
-        field[i][j] = dipole2D(v, pos, p) + rotlet(ω, pos, p)
-        # field[i][j] = rotlet(v, pos, p)
-        # field[i][j] = dipole2D(v, pos, p)
-        # field[i][j] =  f_dipole(v, pos, p)
+            # field[i][j] = dipole2D(v, pos, p) + f_dipole(v, pos, p) + rotlet(v, pos, p)
+            # field[i][j] = dipole2D(v, pos, p) + f_dipole(v, pos, p)
+            field[i][j] = dipole2D(v, pos, p) + rotlet(ω, pos, p)
+            # field[i][j] = rotlet(v, pos, p)
+            # field[i][j] = dipole2D(v, pos, p)
+            # field[i][j] =  f_dipole(v, pos, p)
 
+        end
     end
-end
     # @show field[ii][jj]
     field[ii][jj] = SV(0.0, 0.0)
     # field[ii][jj] = v
@@ -427,7 +364,7 @@ end
 
 
 function periodicbound(id::Tuple, para)
-    xlim = para.nx + 1 
+    xlim = para.nx + 1
     ylim = para.ny + 1
 
     x0, y0 = id
@@ -447,20 +384,20 @@ function periodicbound(id::Tuple, para)
 end
 
 function periodicbound(id::Tuple, nx, ny)
-    xlim = nx 
-    ylim = ny 
+    xlim = nx
+    ylim = ny
 
     x0, y0 = id
     if x0 > xlim
-        x0 = x0 - xlim 
+        x0 = x0 - xlim
     elseif x0 < 1
-        x0 = xlim - (1-x0) 
+        x0 = xlim - (1 - x0)
     end
 
     if y0 > ylim
-        y0 = y0 - ylim 
+        y0 = y0 - ylim
     elseif y0 < 1
-        y0 = ylim - (1-y0)
+        y0 = ylim - (1 - y0)
     end
 
     return (x0, y0)
@@ -563,6 +500,55 @@ end
 
 # end
 
+
+function diffusion2(du::Matrix{Float64}, u, p, para)
+    @unpack D, dx, dy, nx, ny, ddt, dnt = para
+    @unpack pos, src, srctype = p
+
+    # coord, ratio = kernel(pos, para)
+    ii, jj = Int.(round.(pos ./ SA[para.dx, para.dy])) .+ 1
+    du[ii, jj] = src
+    # spread!(u, coord, ratio, src)
+    if srctype == "const_src"
+        for _ = 1:dnt
+            gridUpdate!(du, u, pos, ddt, D, dx, dy, nx, ny)
+            # spread!(du, coord, ratio, src)
+            du[ii, jj] = src
+            u, du = du, u
+        end
+        return u
+
+    else
+        srctype == "free"
+        for _ = 1:dnt
+            gridUpdate!(du, u, pos, ddt, D, dx, dy, nx, ny)
+            u, du = du, u
+        end
+        # spread!(u, coord, ratio, src)
+        return u
+    end
+end
+
+function diffusion(du::Matrix{Float64}, u, p, para)
+    @unpack D, dx, dy, nx, ny, ddt, dnt = para
+    if srctype == "const_src"
+        for _ = 1:dnt
+            gridUpdate!(du, u, pos, ddt, D, dx, dy, nx, ny)
+            spread!(du, coord, ratio, src)
+            u, du = du, u
+        end
+        return u
+
+    else
+        srctype == "free"
+        for _ = 1:dnt
+            gridUpdate!(du, u, pos, ddt, D, dx, dy, nx, ny)
+            u, du = du, u
+        end
+        # spread!(u, coord, ratio, src)
+        return u
+    end
+end
 
 
 # function diffusion(du, u, μ, dx, dy, ddt, dnt, nx, ny)
