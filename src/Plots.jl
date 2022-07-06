@@ -1,6 +1,9 @@
 export
-    plot
-    # makeMoive
+    plot,
+    plot_forces,
+    plot_flow,
+    plot_orient
+# makeMoive
 
 ###
 circle(R, x, y) = (θ = LinRange(0, 2π, 30);
@@ -8,7 +11,7 @@ circle(R, x, y) = (θ = LinRange(0, 2π, 30);
 ###            
 
 
-function RecipesBase.plot(ob::SquareLattice, N = 4)
+function RecipesBase.plot(ob::SquareLattice, N=4)
     d = ob.d
     R = ob.r
     # N = N+1
@@ -19,10 +22,10 @@ function RecipesBase.plot(ob::SquareLattice, N = 4)
 
     x = reshape(x, (1, length(x)))
     y = reshape(y, (1, length(y)))
-    plt = plot(circle(R, x, y), c = :red, alpha = 0.3,
-        xlim = (-N * d + d / 2, N * d + d / 2), ylim = (-N * d + d / 2, N * d + d / 2),
-        axis = nothing,
-        aspect_ratio = :equal, label = "")
+    plt = plot(circle(R, x, y), c=:red, alpha=0.3,
+        xlim=(-N * d + d / 2, N * d + d / 2), ylim=(-N * d + d / 2, N * d + d / 2),
+        axis=nothing,
+        aspect_ratio=:equal, label="")
 
 
     return plt
@@ -35,7 +38,7 @@ function RecipesBase.plot(ob::SquareLattice, N, traj::AbstractArray)
     x = [v[1] for v in traj]
     y = [v[2] for v in traj]
 
-    plot!(plt, x, y, label = "")
+    plot!(plt, x, y, aspect_ratio=:equal, label="")
     # scatter!(plt, [x], [y], label = "")
     # scatter!(plt, [1.0592437756635953], [1.0592437756635953], label = "")
 
@@ -47,7 +50,37 @@ function RecipesBase.plot(traj::Vector{SV})
     x = [v[1] for v in traj]
     y = [v[2] for v in traj]
 
-    plt = plot(x, y, label = "")
+    plt = plot(x, y, label="", aspect_ratio=1)
+
+    return plt
+end
+
+
+
+
+function plot_orient(vel::Vector{SV})
+    a = [atand(v[2], v[1]) for v in vel]
+    plt = plot(a, label="")
+    plot!(plt, xlabel="step", ylabel="ϕ")
+
+    return plt
+end
+function plot_forces(traj::Vector{SV}, force::Vector{SV}, dt::Float64)
+    x = [v[1] for v in traj]
+    y = [v[2] for v in traj]
+
+    v = [v[1] for v in force]
+    w = [v[2] for v in force]
+
+
+    plt = plot(x, y, aspect_ratio=:equal, label="")
+    plt = quiver!(plt, x, y, quiver=(v, w))
+    scatter!(plt, [traj[1][1]], [traj[1][2]])
+    # return plt
+    # x = [v[1] for v in traj]
+    # y = [v[2] for v in traj]
+
+    # plt = plot(x, y, label="")
 
     return plt
 end
@@ -61,6 +94,9 @@ function RecipesBase.plot(traj::Vector{SV3})
 
     return plt
 end
+
+
+
 
 function RecipesBase.plot(field::Matrix{Float64}, para::Parameter)
     hmx = (0:para.nx-1) * (para.dx)
@@ -82,11 +118,28 @@ function RecipesBase.plot(field::Matrix{Float64}, para::Parameter, traj::Vector{
     x = [v[1] for v in traj]
     y = [v[2] for v in traj]
     plt = plot!(hm, x, y, label="", c=:white)
+    # plt = scatter!(hm, x,y , label="")
     scatter!(plt, [traj[1][1]], [traj[1][2]])
 
     return plt
 end
 
+function plot_flow(flow::Vector{Vector{SV}}, para::Parameter, k, amp)
+    dx = para.dx
+    len = length(flow)
+    plt = plot(aspect_ratio=:equal)
+    # k = 1
+    # amp = 1
+    for i in 1:k:len
+        x = fill(i, len)
+        y = (1:len)
+        v = [v[1] / norm(v) for v in flow[i]] .* amp
+        w = [v[2] / norm(v) for v in flow[i]] .* amp
+        quiver!(plt, x[1:k:end] .* dx, y[1:k:end] .* dx, quiver=(v[1:k:end], w[1:k:end]), c=:blue)
+    end
+
+    return plt
+end
 
 
 # function makeMoive(inter::Chemotaxis, para, traj::Vector{SV3})

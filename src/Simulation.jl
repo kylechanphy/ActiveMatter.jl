@@ -4,7 +4,8 @@ Implement of simulation
 
 export
     runSim,
-    runtest
+    runtest,
+    periodicbound
 
 
 ###
@@ -33,7 +34,7 @@ end
 
 
 
-# single particle system / non- interacting particles system
+""" single particle system / non-interacting particles system"""
 function Langevin!(p::Particle, para::Parameter, inter::ObstacleCollision, logger)
     @unpack v0, ω0, flow, flow_dir, Dr, dt, n_step = para
     ob = inter.ob
@@ -68,48 +69,60 @@ function Langevin!(p::Particle, para::Parameter, inter::ObstacleCollision, logge
         #     @show norm(p.vel), p.collide
         # end
         hat_p = getHead(ϕ)
-        forces =  v0 .* hat_p .+ vg
-    
+        forces = v0 .* hat_p .+ vg
+
         cell_du = cell_u0 .+ forces .* dt
         iscollided, collided_F = getCollsionForoce(cell_u0, cell_du, forces, cent_lst, ob)
         p.collide = iscollided
-    
+
         total_forces = forces .+ collided_F
-    
+
         cell_du = cell_u0 .+ total_forces * dt
         cell_du = fold(cell_du, ob)
         cell_u0, cell_du = cell_du, cell_u0
         p.cell_pos = cell_u0
-    
+
         du = u0 + total_forces * dt
         u0, du = du, u0
         p.pos = du
-    
-       """ check correct collision
-        for c in cent_lst
-            dis = norm(c - p.cell_pos)
-            if dis < ob.r
-                @show dis, c
-            end
-        end
-        """
-    
+
+        """ check correct collision
+         for c in cent_lst
+             dis = norm(c - p.cell_pos)
+             if dis < ob.r
+                 @show dis, c
+             end
+         end
+         """
+
         ϕ += ω0 * dt + sqrt(2Dr * dt)randn()
-    
+
         runLogger!(logger, p, i, para::Parameter)
     end
 end
 
 
-
+""" single chomotaxis particle in 2D """
 function Langevin!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logger)
     @unpack v0, ω0, flow, flow_dir, Dr, dt, n_step = para
     vg = flow * SV(cosd(flow_dir), sind(flow_dir))
 
     u0 = p.pos
     du = copy(u0)
+
+    vel0 = p.vel
+    dvel = copy(vel0)
+
+    # ii, jj = Int.(round.(u0 ./ SA[para.dx, para.dy])) .+ 1 ### julia array start from 1
+    # inter.field[ii, jj] = p.src
     dfield = copy(inter.field)
-    ϕ = atan(p.vel[2], p.vel[1])
+    # ff = [[SV(0, 0) for _ in 1:para.nx] for _ in 1:para.ny]
+    # flow = copy(ff)
+    # v00 = 2
+    # p.vel = SV(v00, 0)
+    # vel0 = copy(v0)
+    ϕ = atan(vel0[2], vel0[1])
+
     getHead(ϕ) = SV(cos(ϕ), sin(ϕ))
 
     ### initialize and pre-allocate logger size 
@@ -117,16 +130,39 @@ function Langevin!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logg
 
     for i in 1:n_step
         hat_p = getHead(ϕ)
-        chemforce = getChemotaxisForce(p, inter, para, dfield)
+        chemforce, inter.flow = getChemotaxisForce(p, inter, para, dfield)
+    
+    
+        # @show chemforce
         forces = chemforce + v0 .* hat_p .+ vg
+        # forces = chemforce + SA[v0,v0]
+    
+        if v0 == 0 && i == 2
+            forces = +SV(0, v00)
+            @show forces
+        end
         # forces = 0
         # forces = chemforce 
-        p.vel = forces
-        # if i==1 
-        #     forces += rand(2)
-        # end
+        dvel = forces
+        dϕ = atan(dvel[2], dvel[1]) - atan(vel0[2], vel0[1])
+        if dϕ > π
+            dϕ = 2π - dϕ
+        elseif dϕ < -π
+            dϕ = 2π + dϕ
+        end
+        # @show dϕ/dt
+        p.ω = dϕ / dt
+        # @show p.ω
+    
+        p.vel = dvel
+        dvel, vel0 = vel0, dvel
+
         p.force = chemforce
         du = u0 .+ forces .* dt
+        du = periodicbound(du, para)
+        # du = u0
+    
+    
         u0, du = du, u0
         p.pos = u0
     
@@ -163,9 +199,9 @@ function Langevin3D!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, lo
         du = u0 .+ forces .* dt
         u0, du = du, u0
         p.pos = u0
-    
+
         ϕ += ω0 * dt + sqrt(2Dr * dt)randn()
-    
+
         runLogger!(logger, p, i, para::Parameter, inter)
     end
 end
@@ -177,4 +213,50 @@ function testrun(p::ChemoDroplet3D, para::Parameter, inter::Chemotaxis, logger)
         getChemotaxisForce(p, inter, para, dfield, ff)
 
     end
+end
+
+
+function periodicbound(du::SV, para)
+    xlim = (para.dx * para.nx) - para.dx
+    ylim = (para.dx * para.ny) - para.dy
+
+    # xlim = (para.dx * para.nx) 
+    # ylim = (para.dx * para.ny) 
+
+    x0, y0 = du
+    if x0 > xlim
+        x0 = x0 - xlim
+    elseif x0 < 0
+        x0 = xlim + x0
+    end
+
+    if y0 > ylim
+        y0 = y0 - ylim
+    elseif y0 < 0
+        y0 = ylim + y0
+    end
+
+    return SV(x0, y0)
+end
+
+function periodicbound(du::SV, dx, dy, nx, ny)
+    xlim = (dx * nx) - dx
+    ylim = (dy * ny) - dy
+    # xlim = (dx * nx) 
+    # ylim = (dy * ny) 
+
+    x0, y0 = du
+    if x0 > xlim
+        x0 = x0 - xlim
+    elseif x0 < 0
+        x0 = xlim + x0
+    end
+
+    if y0 > ylim
+        y0 = y0 - ylim
+    elseif y0 < 0
+        y0 = ylim + y0
+    end
+
+    return SV(x0, y0)
 end

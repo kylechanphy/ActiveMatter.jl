@@ -32,6 +32,7 @@ Particle(pos::AbstractArray, v0 = 0, ϕ0 = 0.0) = Particle(SV(pos[1], pos[2]), v
     pos::SV = SV(0, 0)
     vel::SV = SV(0, 0)
     cell_pos::SV = SV(0, 0)
+    ω::Float64 = 1
 
     src::Float64 = 1
     srctype::String = "free"
