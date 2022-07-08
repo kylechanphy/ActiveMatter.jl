@@ -138,3 +138,11 @@ function logging!(logger::CollideLogger, p::AbstractParicles, para, step)
     logger.collide[step] = p.collide
 
 end
+
+"""
+Save data to local
+"""
+
+function outputdata()
+
+end
