@@ -70,7 +70,7 @@ function diffusion3(du::Matrix{Float64}, inter, p, para)
     # coord, ratio = kernel(pos, para)
 
     ii, jj = Int.(round.(pos ./ SA[para.dx, para.dy])) .+ 1 ### julia array start from 1
-    ii, jj = periodicbound((ii, jj), para.nx, para.ny)
+    ii, jj = periodicbound((ii, jj), para)
     # @show ii, jj
     # if ii == nx || jj == ny
     #     @show x,y
@@ -364,18 +364,18 @@ end
 
 
 function periodicbound(id::Tuple, para)
-    xlim = para.nx + 1
-    ylim = para.ny + 1
+    xlim = para.nx
+    ylim = para.ny
 
     x0, y0 = id
     if x0 > xlim
-        x0 = x0 - xlim + 1
+        x0 = x0 - xlim 
     elseif x0 < 1
         x0 = xlim - (1 - x0)
     end
 
     if y0 > ylim
-        y0 = y0 - ylim + 1
+        y0 = y0 - ylim 
     elseif y0 < 1
         y0 = ylim - (1 - y0)
     end
