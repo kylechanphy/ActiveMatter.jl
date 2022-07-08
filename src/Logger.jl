@@ -4,7 +4,8 @@ export
     TrajLogger,
     PosLogger,
     CollideLogger,
-    runLogger
+    runLogger,
+    outputdata
 
 
 """
