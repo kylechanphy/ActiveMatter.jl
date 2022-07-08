@@ -153,5 +153,5 @@ function outputdata(fname, p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDr
     save(fname * "particle.jld2", p_dict)
     save(fname * "inter.jld2", inter_dict)
     save(fname * "para.jld2", para_dict)
-    save(fname * " logger.jld2", logger_dict)
+    save(fname * "log.jld2", logger_dict)
 end
