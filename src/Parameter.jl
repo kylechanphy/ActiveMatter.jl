@@ -22,11 +22,27 @@ end
 
 
 
-function clfCondi(dx, D)
+function clfCondi(dx, D, dt)
     dims = length(dx)
+    ddt = prod(dx .^ 2) / ((2 * dims * D + 0.1) * sum(dx .^ 2))
+    if ddt > dt
+        ddt = dt
+    end
 
-    return prod(dx .^ 2) / ((2 * dims * D + 0.1) * sum(dx .^ 2))
+    return ddt
 end
+
+function get_dnt(dt, ddt)
+    dnt = Int(round(dt / ddt))
+    if dnt == 0
+        dnt = 1
+    end
+   
+    return dnt 
+end
+
+
+
 @with_kw mutable struct ParaChemoDroplet <: Parameter
     Dr::Float64 = 1
     v0::Float64 = 1
@@ -56,8 +72,8 @@ end
     ny::Int = 100
     nz::Int = 100
 
-    ddt::Float64 = clfCondi([dx, dx], D)
-    dnt::Float64 = Int(round(dt / ddt))
+    ddt::Float64 = clfCondi([dx, dx], D, dt)
+    dnt::Float64 = get_dnt(dt, ddt)
     # dnt::Float64 = 1
 
 end
