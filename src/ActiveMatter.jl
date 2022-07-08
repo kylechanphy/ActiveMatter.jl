@@ -4,7 +4,7 @@ using LinearAlgebra
 using Plots
 using StaticArrays
 using Parameters
-using LoopVectorization
+# using LoopVectorization
 
 import Base.Threads.@threads, Base.Threads.@sync, Base.Threads.@spawn
 include("types.jl")
