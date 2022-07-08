@@ -179,47 +179,47 @@ function Langevin!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logg
 end
 
 
-function Langevin3D!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logger)
-    @unpack v0, ω0, flow, flow_dir, Dr, dt, n_step = para
-    # vg = flow * SV(cosd(flow_dir), sind(flow_dir))
+# function Langevin3D!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logger)
+#     @unpack v0, ω0, flow, flow_dir, Dr, dt, n_step = para
+#     # vg = flow * SV(cosd(flow_dir), sind(flow_dir))
 
-    u0 = p.pos
-    du = copy(u0)
-    dfield = copy(inter.field)
-    ffield = copy(dfield)
-    ϕ = atan(p.vel[2], p.vel[1])
-    getHead(ϕ) = SV3(cos(ϕ), sin(ϕ), 1)
+#     u0 = p.pos
+#     du = copy(u0)
+#     dfield = copy(inter.field)
+#     ffield = copy(dfield)
+#     ϕ = atan(p.vel[2], p.vel[1])
+#     getHead(ϕ) = SV3(cos(ϕ), sin(ϕ), 1)
 
-    ### initialize and pre-allocate logger size 
-    setLogger!(logger, para)
-    # println("hi")
-    for i in 1:n_step
-        hat_p = getHead(ϕ)
-        @show i
-        @time chemforce = getChemotaxisForce(p, inter, para, dfield, ffield)
-        forces = chemforce .+ v0 .* hat_p
-        # forces = chemforce 
-        p.vel = forces
-        p.force = chemforce
+#     ### initialize and pre-allocate logger size 
+#     setLogger!(logger, para)
+#     # println("hi")
+#     for i in 1:n_step
+#         hat_p = getHead(ϕ)
+#         @show i
+#         @time chemforce = getChemotaxisForce(p, inter, para, dfield, ffield)
+#         forces = chemforce .+ v0 .* hat_p
+#         # forces = chemforce 
+#         p.vel = forces
+#         p.force = chemforce
 
-        du = u0 .+ forces .* dt
-        u0, du = du, u0
-        p.pos = u0
+#         du = u0 .+ forces .* dt
+#         u0, du = du, u0
+#         p.pos = u0
 
-        ϕ += ω0 * dt + sqrt(2Dr * dt)randn()
+#         ϕ += ω0 * dt + sqrt(2Dr * dt)randn()
 
-        runLogger!(logger, p, i, para::Parameter, inter)
-    end
-end
+#         runLogger!(logger, p, i, para::Parameter, inter)
+#     end
+# end
 
-function testrun(p::ChemoDroplet3D, para::Parameter, inter::Chemotaxis, logger)
-    dfield = copy(inter.field)
-    ff = copy(dfield)
-    for _ in 1:10
-        getChemotaxisForce(p, inter, para, dfield, ff)
+# function testrun(p::ChemoDroplet3D, para::Parameter, inter::Chemotaxis, logger)
+#     dfield = copy(inter.field)
+#     ff = copy(dfield)
+#     for _ in 1:10
+#         getChemotaxisForce(p, inter, para, dfield, ff)
 
-    end
-end
+#     end
+# end
 
 
 function periodicbound(du::SV, para)

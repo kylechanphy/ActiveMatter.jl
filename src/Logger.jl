@@ -144,6 +144,14 @@ end
 Save data to local
 """
 
-function outputdata()
+function outputdata(fname, p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDroplet, logger)
+    p_dict = struct2dict(p)
+    inter_dict = struct2dict(inter)
+    para_dict = struct2dict(para)
+    logger_dict = struct2dict(logger)
 
+    save(fname * "_particle.jld2", p_dict)
+    save(fname * "_inter.jld2", inter_dict)
+    save(fname * "_para.jld2", para_dict)
+    save(fname * " _logger.jld2", logger_dict)
 end
