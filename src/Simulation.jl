@@ -231,38 +231,38 @@ function periodicbound(du::SV, para)
 
     x0, y0 = du
     if x0 > xlim
-        x0 = x0 - xlim
+        x0 = x0 - xlim * (div(x0, xlim))
     elseif x0 < 0
-        x0 = xlim + x0
+        x0 = (div(abs(x0), xlim) + 1)*  xlim + x0
     end
 
     if y0 > ylim
-        y0 = y0 - ylim
+        y0 = y0 - ylim * (div(y0, ylim))
     elseif y0 < 0
-        y0 = ylim + y0
+        y0 = (div(abs(y0), ylim) + 1) * ylim + y0
     end
 
     return SV(x0, y0)
 end
 
-function periodicbound(du::SV, dx, dy, nx, ny)
-    xlim = (dx * nx) - dx
-    ylim = (dy * ny) - dy
-    # xlim = (dx * nx) 
-    # ylim = (dy * ny) 
+# function periodicbound(du::SV, dx, dy, nx, ny)
+#     xlim = (dx * nx) - dx
+#     ylim = (dy * ny) - dy
+#     # xlim = (dx * nx) 
+#     # ylim = (dy * ny) 
 
-    x0, y0 = du
-    if x0 > xlim
-        x0 = x0 - xlim
-    elseif x0 < 0
-        x0 = xlim + x0
-    end
+#     x0, y0 = du
+#     if x0 > xlim
+#         x0 = x0 - xlim*()
+#     elseif x0 < 0
+#         x0 = xlim + x0
+#     end
 
-    if y0 > ylim
-        y0 = y0 - ylim
-    elseif y0 < 0
-        y0 = ylim + y0
-    end
+#     if y0 > ylim
+#         y0 = y0 - ylim
+#     elseif y0 < 0
+#         y0 = ylim + y0
+#     end
 
-    return SV(x0, y0)
-end
+#     return SV(x0, y0)
+# end

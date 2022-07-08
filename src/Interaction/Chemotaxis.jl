@@ -369,15 +369,15 @@ function periodicbound(id::Tuple, para)
 
     x0, y0 = id
     if x0 > xlim
-        x0 = x0 - xlim 
+        x0 = x0 - xlim
     elseif x0 < 1
-        x0 = xlim - (1 - x0)
+        x0 = 1 + -x0
     end
 
     if y0 > ylim
-        y0 = y0 - ylim 
+        y0 = y0 - ylim
     elseif y0 < 1
-        y0 = ylim - (1 - y0)
+        y0 = 1 + -(y0)
     end
 
     return (x0, y0)
@@ -391,13 +391,13 @@ function periodicbound(id::Tuple, nx, ny)
     if x0 > xlim
         x0 = x0 - xlim
     elseif x0 < 1
-        x0 = xlim - (1 - x0)
+        x0 = 1 + -x0
     end
 
     if y0 > ylim
         y0 = y0 - ylim
     elseif y0 < 1
-        y0 = ylim - (1 - y0)
+        y0 = 1 + -(y0)
     end
 
     return (x0, y0)
