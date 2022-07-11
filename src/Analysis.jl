@@ -1,7 +1,8 @@
 export
     MSD,
     slope,
-    DiffusConst
+    DiffusConst,
+    FFT
 
 """
 """
@@ -34,4 +35,23 @@ function DiffusConst(coord, time)
     dims = length(coord[1])
     msd = MSD(coord)
     return slope(msd, time) ./ (2 * dims)
+end
+
+
+function FFT(signal, para::ParaChemoDroplet)
+    N = length(signal)
+    dt = para.dt
+    t = dt: dt : dt*N
+    freq, F = FFT(signal, t)
+
+    return freq, F
+end
+
+function FFT(signal, t)
+    dt = t[2] - t[1]
+    N = length(t)
+    freq = rfftfreq(N, 1/dt)
+    F = abs.(rfft(signal))
+    
+    return freq, F
 end

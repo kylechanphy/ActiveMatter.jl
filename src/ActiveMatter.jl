@@ -5,6 +5,7 @@ using Plots
 using StaticArrays
 using Parameters
 using DrWatson
+using FFTW
 # using LoopVectorization
 
 import Base.Threads.@threads, Base.Threads.@sync, Base.Threads.@spawn
