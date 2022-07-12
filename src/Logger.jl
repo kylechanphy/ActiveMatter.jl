@@ -153,11 +153,13 @@ function outputdata(fname, p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDr
     para_dict = struct2dict(para)
     logger_dict = struct2dict(logger)
 
-    # tmp =  [[logger_dict[:coord][i][1], logger_dict[:coord][i][2]] for i in 1:length(logger_dict[:coord])]
+    """change SVectro to Vector, sometime JLD2 cannot interpret SVector """
     logger_dict[:coord] = sv2v(logger_dict[:coord])
     logger_dict[:pos_fold] = sv2v(logger_dict[:pos_fold])
     logger_dict[:F] = sv2v(logger_dict[:F])
     logger_dict[:vel] = sv2v(logger_dict[:vel])
+
+    inter_dict[:flow] = sv2v(inter_dict[:flow])
 
     delete!(logger_dict, :logfunc)
     save(fname * "particle.jld2", p_dict)
