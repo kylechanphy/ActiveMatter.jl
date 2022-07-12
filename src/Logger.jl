@@ -166,6 +166,7 @@ function outputdata(fname, p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDr
     save(fname * "inter.jld2", inter_dict)
     save(fname * "para.jld2", para_dict)
     save(fname * "log.jld2", logger_dict)
+    println("saved to $fname")
 end
 
 
