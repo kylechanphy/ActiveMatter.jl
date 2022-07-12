@@ -5,7 +5,8 @@ export
     PosLogger,
     CollideLogger,
     runLogger,
-    outputdata
+    outputdata,
+    struct2dict
 
 
 """
@@ -140,6 +141,8 @@ function logging!(logger::CollideLogger, p::AbstractParicles, para, step)
 
 end
 
+
+
 """
 Save data to local
 """
@@ -150,6 +153,8 @@ function outputdata(fname, p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDr
     para_dict = struct2dict(para)
     logger_dict = struct2dict(logger)
 
+    @show typeof(logger.coord)
+    @show typeof(logger_dict[:coord])
     save(fname * "particle.jld2", p_dict)
     save(fname * "inter.jld2", inter_dict)
     save(fname * "para.jld2", para_dict)
