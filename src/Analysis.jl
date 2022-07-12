@@ -2,7 +2,8 @@ export
     MSD,
     slope,
     DiffusConst,
-    FFT
+    FFT,
+    ACF
 
 """
 """
@@ -37,6 +38,25 @@ function DiffusConst(coord, time)
     return slope(msd, time) ./ (2 * dims)
 end
 
+
+function ACF(data, lags)
+    lag = [v for v in 0:lags]
+    return autocor(data, lag)
+    # acf = zeros(lags)
+    # for lag in 1:lags
+    #     acf[lag] = mean(data[1:end-lag] .* data[lag+1:end])
+    # end
+    # return acf ./ acf[1]
+end
+
+function FFT(signal, para::Dict)
+    N = length(signal)
+    dt = para["dt"]
+    t = dt:dt:dt*N
+    freq, F = FFT(signal, t)
+
+    return freq, F
+end
 
 function FFT(signal, para::ParaChemoDroplet)
     N = length(signal)

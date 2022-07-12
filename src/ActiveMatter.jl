@@ -6,6 +6,8 @@ using StaticArrays
 using Parameters
 using DrWatson
 using FFTW
+using StatsBase
+
 # using LoopVectorization
 
 import Base.Threads.@threads, Base.Threads.@sync, Base.Threads.@spawn
