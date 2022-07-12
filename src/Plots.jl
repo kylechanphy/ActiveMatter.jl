@@ -118,8 +118,17 @@ function RecipesBase.plot(field::Matrix{Float64}, para::Parameter)
     return hm
 end
 
+function RecipesBase.plot(field::Matrix{Float64}, para::Dict)
+    hmx = (0:para["nx"]-1) * (para["dx"])
+    hmy = (0:para["ny"]-1) * (para["dy"])
+    hm = heatmap(hmx, hmy, transpose(field), aspect_ratio=1)
 
-function RecipesBase.plot(field::Matrix{Float64}, para::Parameter, traj)
+
+    return hm
+end
+
+
+function RecipesBase.plot(field::Matrix{Float64}, para::Parameter, traj::Vector{SV})
     # hmx = (0:para.nx) * (para.dx)
     # hmy = (0:para.ny) * (para.dy)
     hm = plot(field, para)
@@ -131,6 +140,21 @@ function RecipesBase.plot(field::Matrix{Float64}, para::Parameter, traj)
     plt = plot!(hm, x, y, label="", c=:white)
     # plt = scatter!(hm, x,y , label="")
     scatter!(plt, [traj[1][1]], [traj[1][2]])
+
+    return plt
+end
+function RecipesBase.plot(field::Matrix{Float64}, para::Dict, traj)
+    # hmx = (0:para.nx) * (para.dx)
+    # hmy = (0:para.ny) * (para.dy)
+    hm = plot(field, para)
+    # hm = heatmap(hmx, hmy, transpose(field), aspect_ratio=1)
+    # hm = heatmap(hmx, hmy, field, aspect_ratio=1)
+    # traj = traj[1:end-1]
+    x = [v[1] for v in traj]
+    y = [v[2] for v in traj]
+    plt = plot!(hm, x, y, label="", c=:white)
+    # plt = scatter!(hm, x,y , label="")
+    # scatter!(plt, [traj[1][1]], [traj[1][2]])
 
     return plt
 end

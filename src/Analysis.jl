@@ -39,14 +39,15 @@ function DiffusConst(coord, time)
 end
 
 
+
+"""
+curvature of chemodroplet 
+"""
+
+### Auto-correlation function 
 function ACF(data, lags)
     lag = [v for v in 0:lags]
-    return autocor(data, lag)
-    # acf = zeros(lags)
-    # for lag in 1:lags
-    #     acf[lag] = mean(data[1:end-lag] .* data[lag+1:end])
-    # end
-    # return acf ./ acf[1]
+    return lag, autocor(data, lag)
 end
 
 function FFT(signal, para::Dict)
