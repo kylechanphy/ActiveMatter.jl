@@ -153,10 +153,21 @@ function outputdata(fname, p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDr
     para_dict = struct2dict(para)
     logger_dict = struct2dict(logger)
 
-    @show typeof(logger.coord)
-    @show typeof(logger_dict[:coord])
+    # tmp =  [[logger_dict[:coord][i][1], logger_dict[:coord][i][2]] for i in 1:length(logger_dict[:coord])]
+    logger_dict[:coord] = sv2v(logger_dict[:coord])
+    logger_dict[:pos_fold] = sv2v(logger_dict[:pos_fold])
+    logger_dict[:F] = sv2v(logger_dict[:F])
+    logger_dict[:vel] = sv2v(logger_dict[:vel])
+
+    delete!(logger_dict, :logfunc)
     save(fname * "particle.jld2", p_dict)
     save(fname * "inter.jld2", inter_dict)
     save(fname * "para.jld2", para_dict)
     save(fname * "log.jld2", logger_dict)
+end
+
+
+function sv2v(sv)
+    tmp = [ [sv[i][1],sv[i][2]] for i in 1:length(sv)]
+    return tmp 
 end

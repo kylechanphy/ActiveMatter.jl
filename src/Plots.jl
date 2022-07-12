@@ -55,6 +55,15 @@ function RecipesBase.plot(traj::Vector{SV})
     return plt
 end
 
+function RecipesBase.plot(traj::Vector{Vector{Float64}})
+    x = [v[1] for v in traj]
+    y = [v[2] for v in traj]
+
+    plt = plot(x, y, label="", aspect_ratio=1)
+
+    return plt
+end
+
 
 
 
@@ -65,6 +74,8 @@ function plot_orient(vel::Vector{SV})
 
     return plt
 end
+
+
 function plot_forces(traj::Vector{SV}, force::Vector{SV}, dt::Float64)
     x = [v[1] for v in traj]
     y = [v[2] for v in traj]
@@ -108,7 +119,7 @@ function RecipesBase.plot(field::Matrix{Float64}, para::Parameter)
 end
 
 
-function RecipesBase.plot(field::Matrix{Float64}, para::Parameter, traj::Vector{SV})
+function RecipesBase.plot(field::Matrix{Float64}, para::Parameter, traj)
     # hmx = (0:para.nx) * (para.dx)
     # hmy = (0:para.ny) * (para.dy)
     hm = plot(field, para)
