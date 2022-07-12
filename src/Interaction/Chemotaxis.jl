@@ -70,7 +70,7 @@ function diffusion3(du::Matrix{Float64}, inter, p, para)
     # coord, ratio = kernel(pos, para)
 
     ii, jj = Int.(round.(pos ./ SA[para.dx, para.dy])) .+ 1 ### julia array start from 1
-    ii, jj = periodicbound((ii, jj), para)
+    # ii, jj = periodicbound((ii, jj), para)
     # @show ii, jj
     # if ii == nx || jj == ny
     #     @show x,y
@@ -193,7 +193,7 @@ end
 
 function getForce2(field, pos::SV, para)
     ii, jj = Int.(round.(pos ./ SA[para.dx, para.dy])) .+ 1
-    ii, jj = periodicbound((ii, jj), para)
+    # ii, jj = periodicbound((ii, jj), para)
 
     force = SV(0, 0)
     # surface = ((ii + 1, jj), (ii - 1, jj), (ii, jj + 1), (ii, jj - 1))
@@ -284,8 +284,8 @@ function farfield2(field, pos, v, ω, dx, dy)
     # pos = (pos .- 1) .* SA[dx, dy]
     # pos = periodicbound(pos, dx, dy, nx, ny)
 
-    Threads.@threads for i in 2:nx-1
-        for j in 2:ny-1
+    Threads.@threads for i in 1:nx
+        for j in 1:ny
             # p = (SA[i, j] .- 1) .* SA[dx, dy]
             # p = periodicbound(p, dx, dy, nx, ny)
 
@@ -371,13 +371,13 @@ function periodicbound(id::Tuple, para)
     if x0 > xlim
         x0 = x0 - xlim
     elseif x0 < 1
-        x0 = 1 + -x0
+        x0 = xlim + x0
     end
 
     if y0 > ylim
         y0 = y0 - ylim
     elseif y0 < 1
-        y0 = 1 + -(y0)
+        y0 = ylim + y0
     end
 
     return (x0, y0)
@@ -391,13 +391,13 @@ function periodicbound(id::Tuple, nx, ny)
     if x0 > xlim
         x0 = x0 - xlim
     elseif x0 < 1
-        x0 = 1 + -x0
+        x0 = xlim + x0
     end
 
     if y0 > ylim
         y0 = y0 - ylim
     elseif y0 < 1
-        y0 = 1 + -(y0)
+        y0 = ylim + y0
     end
 
     return (x0, y0)
