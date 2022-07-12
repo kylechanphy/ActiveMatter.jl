@@ -169,7 +169,7 @@ function outputdata(fname, p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDr
 
 
     open(fname*"para.txt", "w") do file
-        for (key, value) in para_d
+        for (key, value) in para_dict
             write(file, "$(key)\t\t$(value)\n")
         end
     end
