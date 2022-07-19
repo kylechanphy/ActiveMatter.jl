@@ -148,6 +148,7 @@ Save data to local
 """
 
 function outputdata(fname, p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDroplet, logger)
+    println("saveing data")
     p_dict = struct2dict(p)
     inter_dict = struct2dict(inter)
     para_dict = struct2dict(para)

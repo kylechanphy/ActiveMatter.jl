@@ -6,7 +6,9 @@ export
     kernel,
     getForce,
     ∇,
-    periodicbound
+    periodicbound,
+    dipoleimage,
+    farfield!
 
 
 
@@ -26,12 +28,6 @@ function Chemotaxis(ndx::Int=5, ndy::Int=5)
 end
 
 
-# function getChemotaxisForce(p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDroplet, du)
-#     inter.field = diffusion(du, inter.field, p, para)
-#     force = getForce(inter.field, p.pos, para) * para.α
-#     # return SV(0, 0)
-#     return force
-# end
 
 """ test move in constanst field """
 # function getChemotaxisForce(p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDroplet, du)
@@ -63,48 +59,17 @@ function diffusion3(du::Matrix{Float64}, inter, p, para)
     @unpack pos_fold, vel, ω, src, srctype = p
     pos = pos_fold
     u = inter.field
-    # ff =  copy(inter.flow)
-    # ff = copy(flow)
-    # ff = copy(du)
-    ff = [[SV(0, 0) for _ in 1:nx] for _ in 1:ny]
-    # coord, ratio = kernel(pos, para)
-
+    # ff = [[SV(0, 0) for _ in 1:nx] for _ in 1:ny]
     ii, jj = Int.(round.(pos ./ SA[para.dx, para.dy])) .+ 1 ### julia array start from 1
-    # ii, jj = periodicbound((ii, jj), para)
-    # @show ii, jj
-    # if ii == nx || jj == ny
-    #     @show x,y
-    # end
-    #  if ii== 0 || jj == 0
-    #     @show x,y
-    # end  
-
-    # du[ii, jj] = src
 
     ### current position
     pos = SA[ii, jj]
-    # spread!(u, coord, ratio, src)
-    ff = farfield2(ff, pos, vel, ω, dx, dy)
-    # inter.flow = copy(ff)
-    # if srctype == "const_src"
-    # ff = farfield(ff, pos, dx,dy)
+    ff = farfield!(ff, pos, para, p)
     for _ = 1:dnt
         gridUpdateAdvection!(du, u, pos, vel, ddt, D, dx, dy, nx, ny, ff)
-        # spread!(du, coord, ratio, src)
-        # du[ii, jj] = src
         u, du = du, u
     end
     return u, ff
-
-    # else
-    #     srctype == "free"
-    #     for _ = 1:dnt
-    #         gridUpdate!(du, u, pos, ddt, D, dx, dy, nx, ny)
-    #         u, du = du, u
-    #     end
-    #     # spread!(u, coord, ratio, src)
-    #     return u
-    # end
 end
 
 function gridUpdateAdvection!(du, u, pos, vel, dt, D, dx, dy, nx, ny, ff)
@@ -112,20 +77,14 @@ function gridUpdateAdvection!(du, u, pos, vel, dt, D, dx, dy, nx, ny, ff)
     _dx, _dy = 1 / dx, 1 / dy
     x, y = pos
     flux = 1
-    # 2d 
+    ### 2d 
     flux = flux / 2
-    # @tturbo for i in 2:nx-1
-    # if x == nx || y == ny
-    #     @show x,y
-    # end
-    #  if x == 0 || y == 0
-    #     @show x,y
-    # end  
     x1, y1 = periodicbound((x + 1, y), nx, ny)
     # x2, y2 = periodicbound((x - 1, y), para)
     x3, y3 = periodicbound((x, y + 1), nx, ny)
     # x4, y4 = periodicbound((x, y - 1), para)
 
+    # du[x,y] = 0.0
     du[x, y] = u[x, y] + dt * (D * (2 * flux * _dx) + 2 * D * (u[x1, y1] - u[x, y]) * _dx2 + flux * ff[x][y][1]
                                +
                                D * (2 * flux * _dy) + 2 * D * (u[x3, y3] - u[x, y]) * _dy2 + flux * ff[x][y][2])
@@ -193,10 +152,7 @@ end
 
 function getForce2(field, pos::SV, para)
     ii, jj = Int.(round.(pos ./ SA[para.dx, para.dy])) .+ 1
-    # ii, jj = periodicbound((ii, jj), para)
-
     force = SV(0, 0)
-    # surface = ((ii + 1, jj), (ii - 1, jj), (ii, jj + 1), (ii, jj - 1))
     for (ii, jj) in surface2((ii, jj), para)
         # @show ii, jj
         force += ∇((ii, jj), field, para)
@@ -208,16 +164,19 @@ function surface2(grid_id, para)
     ii, jj = grid_id
     nx, ny = para.nx, para.ny
     pt1, pt2, pt3, pt4 = (ii + 1, jj), (ii - 1, jj), (ii, jj + 1), (ii, jj - 1)
+    # @show ii, jj
     if ii == nx
         pt1 = (1, jj)
     elseif ii == 1
         pt2 = (nx, jj)
-    elseif jj == ny
+    end
+
+    if jj == ny
         pt3 = (ii, 1)
     elseif jj == 1
         pt4 = (ii, ny)
     end
-
+    # @show (pt1, pt2, pt3, pt4)
     return (pt1, pt2, pt3, pt4)
 end
 
@@ -276,28 +235,23 @@ function ∇(coord::Tuple{Int64,Int64}, field, para)
 end
 
 
-function farfield2(field, pos, v, ω, dx, dy)
-    nx = size(field)[1]
-    ny = size(field[1])[1]
+function farfield!(field, pos, para, part)
+    v = part.vel
+    ω = part.ω
+    nx = para.nx
+    ny = para.ny
+    # field = [[SV(0, 0) for _ in 1:nx] for _ in 1:ny]
     ii, jj = pos
-    # @show ii,jj
-    # pos = (pos .- 1) .* SA[dx, dy]
-    # pos = periodicbound(pos, dx, dy, nx, ny)
-
-    Threads.@threads for i in 1:nx
-        for j in 1:ny
-            # p = (SA[i, j] .- 1) .* SA[dx, dy]
-            # p = periodicbound(p, dx, dy, nx, ny)
-
-            p = SA[i, j]
-
-            # field[i][j] = dipole2D(v, pos, p) + f_dipole(v, pos, p) + rotlet(v, pos, p)
-            # field[i][j] = dipole2D(v, pos, p) + f_dipole(v, pos, p)
-            field[i][j] = dipole2D(v, pos, p) + rotlet(ω, pos, p)
-            # field[i][j] = rotlet(v, pos, p)
-            # field[i][j] = dipole2D(v, pos, p)
-            # field[i][j] =  f_dipole(v, pos, p)
-
+    for pos0 in dipoleimage(pos, nx, ny)[1:end]
+        Threads.@threads for i in 1:nx
+        # for i in 1:nx
+            for j in 1:ny
+                p = SA[i, j]
+        
+                # field[i][j] += dipole2D(v, pos0, p) + rotlet(ω, pos0, p)
+                # field[i][j] += dipole2D(v, pos0, p) 
+                field[i][j] += rotlet(ω, pos0, p)
+            end
         end
     end
     # @show field[ii][jj]
@@ -308,13 +262,19 @@ function farfield2(field, pos, v, ω, dx, dy)
 
 end
 
-# source dipole
+""" 
+source dipole
+
+v: instantiate velocity 
+pos0: grid id  of dipole 
+pos: grid of space 
+"""
 function dipole2D(v, pos0, pos)
-    r = norm(pos - pos0)
+    stokesflow = SA[0.0, 0.0]
     D = norm(v)
-    # D = 0.01
-    x, y = pos - pos0
     e0 = atand(v[2], v[1])
+    r = norm(pos - pos0)
+    x, y = pos - pos0
     e = atand(y, x)
 
     vr = D * cosd(e - e0) / (2π * r^2)
@@ -322,11 +282,9 @@ function dipole2D(v, pos0, pos)
 
     vx = vr * cosd(e) - ve * sind(e)
     vy = vr * sind(e) + ve * cosd(e)
+    stokesflow += SA[vx, vy]
 
-    vx = vx
-    vy = vy
-    # @show SA[vx,vy]
-    return SA[vx, vy]
+    return stokesflow
 end
 
 
@@ -348,36 +306,48 @@ end
 
 
 function rotlet(ω, pos0, pos)
-    r = pos - pos0
-    # @show rv
-    # x, y = pos - pos0
-    # e = atand(y, x)
-    # hate = v ./ norm(v)
-    # hatr = r ./ norm(r)
-    # e0 = atand(v[2], v[1])
-    flow = SA[r[2], -r[1]] ./ norm(r)^2
-    # flow = norm(v) .* (hate + dot(hatr, hate) .* hatr) ./ (4π .* norm(r))
-    # flow = norm(v) .* (hate + dot(hatr, hate) .* hatr) ./ (4norm(r))
+    x, y = pos - pos0
+    r = norm(pos - pos0)
+    # flow = SA[r[2], -r[1]] ./ norm(r)^2
 
-    return -ω * flow / (4π)
+    rvec = SA[x, y, 0.0]
+    flow = cross(SA[0.0, 0.0, 1.0], rvec) ./ r^2
+    flow = ω * flow / (2π)
+    flow = SA[flow[1], flow[2]]
+    return flow
 end
 
 
 function periodicbound(id::Tuple, para)
     xlim = para.nx
     ylim = para.ny
-
     x0, y0 = id
-    if x0 > xlim
-        x0 = x0 - xlim
-    elseif x0 < 1
-        x0 = xlim + x0
+
+    # if x0 > xlim
+    #     x0 = x0 - xlim
+    # elseif x0 < 1
+    #     x0 = xlim + x0
+    # end
+
+    # if y0 > ylim
+    #     y0 = y0 - ylim
+    # elseif y0 < 1
+    #     y0 = ylim + y0
+    # end
+
+    if x0 == 0
+        x0 = xlim
+        @show x0
+    elseif x0 == xlim
+        x0 = 1
     end
 
-    if y0 > ylim
-        y0 = y0 - ylim
-    elseif y0 < 1
-        y0 = ylim + y0
+    if y0 == 0
+        y0 = ylim
+        @show y0
+    elseif y0 == ylim
+        y0 = 1
+        @show y0
     end
 
     return (x0, y0)
@@ -388,19 +358,50 @@ function periodicbound(id::Tuple, nx, ny)
     ylim = ny
 
     x0, y0 = id
-    if x0 > xlim
-        x0 = x0 - xlim
-    elseif x0 < 1
-        x0 = xlim + x0
+    # if x0 > xlim
+    #     x0 = x0 - xlim
+    # elseif x0 < 1
+    #     x0 = xlim + x0
+    # end
+
+    # if y0 > ylim
+    #     y0 = y0 - ylim
+    # elseif y0 < 1
+    #     y0 = ylim + y0
+    # end
+
+    if x0 == 0
+        x0 = xlim
+    elseif x0 == xlim + 1
+        x0 = 1
     end
 
-    if y0 > ylim
-        y0 = y0 - ylim
-    elseif y0 < 1
-        y0 = ylim + y0
+    if y0 == 0
+        y0 = ylim
+    elseif y0 == ylim + 1
+        y0 = 1
     end
-
     return (x0, y0)
+end
+
+
+function dipoleimage(pos, nx, ny)
+    x0, y0 = pos
+    pos0 = copy(pos)
+    pos1 = pos .- SA[nx, 0]
+    pos2 = pos .+ SA[nx, 0]
+    pos3 = pos .- SA[0, ny]
+    pos4 = pos .+ SA[0, ny]
+
+    pos5 = pos .- SA[nx, ny]
+    pos6 = pos .+ SA[nx, ny]
+    pos7 = pos .+ SA[nx, -ny]
+    pos8 = pos .+ SA[-nx, ny]
+
+    return SA[pos0, pos1, pos2, pos3, pos4,
+        pos5, pos6, pos7, pos8]
+    # return SA[pos0, pos1, pos2, pos3, pos4]
+
 end
 
 """ 

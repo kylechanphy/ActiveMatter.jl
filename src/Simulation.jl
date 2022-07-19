@@ -114,6 +114,8 @@ function Langevin!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logg
     du_fold = copy(u0_fold)
 
     vel0 = p.vel
+    println("hey! here ")
+    @show vel0
     dvel = copy(vel0)
 
     # ii, jj = Int.(round.(u0 ./ SA[para.dx, para.dy])) .+ 1 ### julia array start from 1
@@ -224,7 +226,7 @@ end
 
 function periodicbound(du::SV, para)
     xlim = (para.dx * para.nx) - para.dx
-    ylim = (para.dx * para.ny) - para.dy
+    ylim = (para.dy * para.ny) - para.dy
 
     # xlim = (para.dx * para.nx) 
     # ylim = (para.dx * para.ny) 
@@ -237,9 +239,17 @@ function periodicbound(du::SV, para)
     end
 
     if y0 > ylim
+        # @show y0
         y0 = y0 - ylim * (div(y0, ylim))
+        # println("y0 > ylims  ")
+        # @show y0
+        # println(" ")
     elseif y0 < 0
+        # @show y0
         y0 = (div(abs(y0), ylim) + 1) * ylim + y0
+        # println("y0 < ylims  ")
+        # @show y0
+        # println(" ")
     end
 
     return SV(x0, y0)
