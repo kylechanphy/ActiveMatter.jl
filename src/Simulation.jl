@@ -16,7 +16,7 @@ function runSim(s::System)
     logger = s.loggers
     dims = length(p.pos)
     if dims == 2
-        Langevin!(p, para, inter, logger)
+        Langevin!(p, para, inter, logger, s.saving)
     elseif dims == 3
         Langevin3D!(p, para, inter, logger)
     end
@@ -103,7 +103,7 @@ end
 
 
 """ single chomotaxis particle in 2D """
-function Langevin!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logger)
+function Langevin!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logger, saving)
     @unpack v0, ω0, flow, flow_dir, Dr, dt, n_step = para
     vg = flow * SV(cosd(flow_dir), sind(flow_dir))
 
@@ -133,15 +133,15 @@ function Langevin!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logg
     ### initialize and pre-allocate logger size 
     setLogger!(logger, para)
 
-    for i in 1:n_step
+    @showprogress for i in 1:n_step
         hat_p = getHead(ϕ)
         chemforce, inter.flow = getChemotaxisForce(p, inter, para, dfield)
-    
-    
+
+
         # @show chemforce
         forces = chemforce + v0 .* hat_p .+ vg
         # forces = chemforce + SA[v0,v0]
-    
+
         # if v0 == 0 && i == 2
         #     forces = +SV(0, v00)
         #     @show forces
@@ -158,25 +158,31 @@ function Langevin!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logg
         # @show dϕ/dt
         p.ω = dϕ / dt
         # @show p.ω
-    
+
         p.vel = dvel
         dvel, vel0 = vel0, dvel
-    
+
         p.force = chemforce
         du = u0 .+ forces .* dt
         du_fold = periodicbound(du, para)
         # du = periodicbound(du, para)
         # du = u0
-    
-    
+
+
         u0, du = du, u0
         u0_fold, du_fold = du_fold, u0_fold
         p.pos = u0
         p.pos_fold = u0_fold
-    
+
         ϕ += ω0 * dt + sqrt(2Dr * dt)randn()
-    
+
         runLogger!(logger, p, i, para::Parameter, inter)
+        if saving.save_concen_field == true
+            if saving.every % i == 0
+                save_concen_field(inter.field, para, i, saving)
+            end
+        end
+
     end
 end
 

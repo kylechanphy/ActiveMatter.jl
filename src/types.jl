@@ -29,24 +29,36 @@ const SV3 = SVector{3,Float64}
 """
 System interface
 """
-mutable struct System{T,T2,T3,T4} <: AbstractSystem
+mutable struct System{T,T2,T3,T4,T5} <: AbstractSystem
     particles::T
     interactions::T2
     parameter::T3
     loggers::T4
+    saving::T5
 end
+
+
+# @with_kw mutable struct System <: AbstractSystem
+#     particles
+#     interactions
+#     parameter
+#     saving
+
+# end
 
 function System(;
     particles,
     interactions,
     parameter,
-    loggers)
+    loggers,
+    saveing)
 
     p = particles
     in = interactions
     para = parameter
     log = loggers
-    return System(p, in, para, log)
+    save = saveing
+    return System(p, in, para, log, save)
 end
 
 # function setSystem(;

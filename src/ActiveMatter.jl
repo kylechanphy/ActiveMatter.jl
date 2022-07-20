@@ -7,6 +7,7 @@ using Parameters
 using DrWatson
 using FFTW
 using StatsBase
+using ProgressMeter
 
 # using LoopVectorization
 

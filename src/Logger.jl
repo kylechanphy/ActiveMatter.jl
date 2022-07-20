@@ -6,7 +6,9 @@ export
     CollideLogger,
     runLogger,
     outputdata,
-    struct2dict
+    struct2dict,
+    save_concen_field,
+    Saving
 
 
 """
@@ -143,12 +145,35 @@ end
 
 
 
+
+
+"""
+Save concentration field
+"""
+
+@with_kw mutable struct Saving
+    savename::String = "output/"
+    save_concen_field::Bool = false
+    every::Int = 10
+
+end
+
+function save_concen_field(field, para, step, saving)
+    fname = saving.savename * "/concentration/field"
+    t = para.dt * step
+    save(fname*"_$t.jld2", "field", field)
+end
+
+
+
+
 """
 Save data to local
 """
 
-function outputdata(fname, p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDroplet, logger)
+function outputdata(p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDroplet, logger, saving)
     println("saveing data")
+    fname = saving.savename
     p_dict = struct2dict(p)
     inter_dict = struct2dict(inter)
     para_dict = struct2dict(para)
@@ -169,7 +194,7 @@ function outputdata(fname, p::ChemoDroplet, inter::Chemotaxis, para::ParaChemoDr
     save(fname * "log.jld2", logger_dict)
 
 
-    open(fname*"para.txt", "w") do file
+    open(fname * "para.txt", "w") do file
         for (key, value) in para_dict
             write(file, "$(key)\t\t$(value)\n")
         end
