@@ -59,7 +59,7 @@ function diffusion3(du::Matrix{Float64}, inter, p, para)
     @unpack pos_fold, vel, ω, src, srctype = p
     pos = pos_fold
     u = inter.field
-    # ff = [[SV(0, 0) for _ in 1:nx] for _ in 1:ny]
+    ff = [[SV(0, 0) for _ in 1:nx] for _ in 1:ny]
     ii, jj = Int.(round.(pos ./ SA[para.dx, para.dy])) .+ 1 ### julia array start from 1
 
     ### current position
@@ -250,7 +250,7 @@ function farfield!(field, pos, para, part)
         
                 # field[i][j] += dipole2D(v, pos0, p) + rotlet(ω, pos0, p)
                 # field[i][j] += dipole2D(v, pos0, p) 
-                field[i][j] += rotlet(ω, pos0, p)
+                field[i][j] = field[i][j] + rotlet(ω, pos0, p)
             end
         end
     end
@@ -308,11 +308,13 @@ end
 function rotlet(ω, pos0, pos)
     x, y = pos - pos0
     r = norm(pos - pos0)
+    # y, x = pos - pos0
+    # r = norm(pos0 - pos)
     # flow = SA[r[2], -r[1]] ./ norm(r)^2
 
     rvec = SA[x, y, 0.0]
     flow = cross(SA[0.0, 0.0, 1.0], rvec) ./ r^2
-    flow = ω * flow / (2π)
+    flow = ω .* flow ./ (2π)
     flow = SA[flow[1], flow[2]]
     return flow
 end
