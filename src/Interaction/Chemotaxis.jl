@@ -248,9 +248,9 @@ function farfield!(field, pos, para, part)
             for j in 1:ny
                 p = SA[i, j]
         
-                # field[i][j] += dipole2D(v, pos0, p) + rotlet(ω, pos0, p)
+                field[i][j] += dipole2D(v, pos0, p) + rotlet(ω, pos0, p)
                 # field[i][j] += dipole2D(v, pos0, p) 
-                field[i][j] = field[i][j] + rotlet(ω, pos0, p)
+                # field[i][j] = field[i][j] + rotlet(ω, pos0, p)
             end
         end
     end
