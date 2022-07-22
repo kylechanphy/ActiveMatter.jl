@@ -161,7 +161,8 @@ end
 function save_concen_field(field, para, step, saving)
     fname = saving.savename * "/concentration/field"
     t = para.dt * step
-    save(fname*"_$t.jld2", "field", field)
+    data = Dict("field" => field, "t"=>t)
+    save(fname*"_$step.jld2", data)
 end
 
 

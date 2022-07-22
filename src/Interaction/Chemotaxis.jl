@@ -8,7 +8,8 @@ export
     ∇,
     periodicbound,
     dipoleimage,
-    farfield!
+    farfield!,
+    nearestImage
 
 
 
@@ -242,25 +243,67 @@ function farfield!(field, pos, para, part)
     ny = para.ny
     # field = [[SV(0, 0) for _ in 1:nx] for _ in 1:ny]
     ii, jj = pos
-    for pos0 in dipoleimage(pos, nx, ny)[1:end]
-        Threads.@threads for i in 1:nx
-        # for i in 1:nx
-            for j in 1:ny
-                p = SA[i, j]
-        
-                field[i][j] += dipole2D(v, pos0, p) + rotlet(ω, pos0, p)
+    # @show pos
+    # for pos0 in dipoleimage(pos, nx, ny)
+    # images = dipoleimage(pos, nx, ny)
+    Threads.@threads for i in 1:nx
+    # for i in 1:nx
+        for j in 1:ny
+            p = SA[i, j]
+                field[i][j] += dipole2D(v, pos, p, nx, ny) + rotlet(ω, pos, p, nx, ny)
                 # field[i][j] += dipole2D(v, pos0, p) 
                 # field[i][j] = field[i][j] + rotlet(ω, pos0, p)
-            end
         end
     end
+    # end
     # @show field[ii][jj]
+    # @show ii, jj
     field[ii][jj] = SV(0.0, 0.0)
     # field[ii][jj] = v
     # @show field
     return field
 
 end
+
+function dipoleimage(pos, nx, ny)
+    x0, y0 = pos
+    pos1 = copy(pos)
+
+    pos1 = SA[nx, ny]
+    pos1 = pos .- SA[nx, 0]
+    pos2 = pos .+ SA[nx, 0]
+    pos3 = pos .- SA[0, ny]
+    pos4 = pos .+ SA[0, ny]
+
+    pos5 = pos .- SA[nx, ny]
+    pos6 = pos .+ SA[nx, ny]
+    pos7 = pos .+ SA[nx, -ny]
+    pos8 = pos .+ SA[-nx, ny]
+
+    return SA[pos0, pos1, pos2, pos3, pos4,
+        pos5, pos6, pos7, pos8]
+    # return SA[pos0, pos1, pos2, pos3, pos4]
+
+end
+
+function nearestImage(pos0, pos, nx, ny)
+    dx, dy = pos - pos0
+
+    if dx > nx*0.5
+        dx = dx - nx
+    elseif dx <= -nx*0.5 
+        dx = dx + nx
+    end
+
+    if dy > ny * 0.5
+        dy = dy - ny
+    elseif dy <= -ny * 0.5
+        dy = dy + ny
+    end
+
+    return dx, dy
+end
+
 
 """ 
 source dipole
@@ -269,12 +312,14 @@ v: instantiate velocity
 pos0: grid id  of dipole 
 pos: grid of space 
 """
-function dipole2D(v, pos0, pos)
+function dipole2D(v, pos0, pos, nx, ny)
     stokesflow = SA[0.0, 0.0]
     D = norm(v)
     e0 = atand(v[2], v[1])
-    r = norm(pos - pos0)
-    x, y = pos - pos0
+    # r = norm(pos - pos0)
+    # x, y = pos - pos0
+    x, y = nearestImage(pos, pos0, nx, ny)
+    r = norm(SA[x,y])
     e = atand(y, x)
 
     vr = D * cosd(e - e0) / (2π * r^2)
@@ -305,16 +350,17 @@ function f_dipole(v, pos0, pos)
 end
 
 
-function rotlet(ω, pos0, pos)
-    x, y = pos - pos0
-    r = norm(pos - pos0)
+function rotlet(ω, pos0, pos, nx, ny)
+    # x, y = pos - pos0
+    x, y = nearestImage(pos0, pos, nx, ny)
+    r = norm(SA[x,y])
     # y, x = pos - pos0
     # r = norm(pos0 - pos)
     # flow = SA[r[2], -r[1]] ./ norm(r)^2
 
     rvec = SA[x, y, 0.0]
     flow = cross(SA[0.0, 0.0, 1.0], rvec) ./ r^2
-    flow = ω .* flow ./ (2π)
+    flow = ω .* flow ./ (4π)
     flow = SA[flow[1], flow[2]]
     return flow
 end
@@ -387,24 +433,7 @@ function periodicbound(id::Tuple, nx, ny)
 end
 
 
-function dipoleimage(pos, nx, ny)
-    x0, y0 = pos
-    pos0 = copy(pos)
-    pos1 = pos .- SA[nx, 0]
-    pos2 = pos .+ SA[nx, 0]
-    pos3 = pos .- SA[0, ny]
-    pos4 = pos .+ SA[0, ny]
 
-    pos5 = pos .- SA[nx, ny]
-    pos6 = pos .+ SA[nx, ny]
-    pos7 = pos .+ SA[nx, -ny]
-    pos8 = pos .+ SA[-nx, ny]
-
-    return SA[pos0, pos1, pos2, pos3, pos4,
-        pos5, pos6, pos7, pos8]
-    # return SA[pos0, pos1, pos2, pos3, pos4]
-
-end
 
 """ 
 # function kernel(pos::SV, para)

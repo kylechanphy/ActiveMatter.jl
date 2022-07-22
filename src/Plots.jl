@@ -121,7 +121,7 @@ end
 function RecipesBase.plot(field::Matrix{Float64}, para::Dict)
     hmx = (0:para["nx"]-1) * (para["dx"])
     hmy = (0:para["ny"]-1) * (para["dy"])
-    hm = heatmap(hmx, hmy, transpose(field), aspect_ratio=1, xlims=(0, para.dx * para.nx), ylims=(0, para.dy * para.ny))
+    hm = heatmap(hmx, hmy, transpose(field), aspect_ratio=1, xlims=(0, para["dx"] * para["nx"]), ylims=(0, para["dy"] * para["ny"]))
 
 
     return hm
@@ -152,7 +152,7 @@ function RecipesBase.plot(field::Matrix{Float64}, para::Dict, traj)
     # traj = traj[1:end-1]
     x = [v[1] for v in traj]
     y = [v[2] for v in traj]
-    plt = plot!(hm, x, y, label="", c=:white, xlims=(0, para.dx * para.nx), ylims=(0, para.dy * para.ny))
+    plt = plot!(hm, x, y, label="", c=:white, xlims=(0, para["dx"] * para["nx"]), ylims=(0, para["dy"] * para["ny"]))
     # plt = scatter!(hm, x,y , label="")
     # scatter!(plt, [traj[1][1]], [traj[1][2]])
 

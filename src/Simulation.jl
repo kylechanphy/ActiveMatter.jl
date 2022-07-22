@@ -132,7 +132,7 @@ function Langevin!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logg
 
     ### initialize and pre-allocate logger size 
     setLogger!(logger, para)
-
+    @show saving.every
     @showprogress for i in 1:n_step
         hat_p = getHead(ϕ)
         chemforce, inter.flow = getChemotaxisForce(p, inter, para, dfield)
@@ -178,7 +178,7 @@ function Langevin!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logg
 
         runLogger!(logger, p, i, para::Parameter, inter)
         if saving.save_concen_field == true
-            if saving.every % i == 0
+            if i % saving.every == 0 || i == 1
                 save_concen_field(inter.field, para, i, saving)
             end
         end
