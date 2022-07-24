@@ -206,6 +206,6 @@ end
 
 
 function sv2v(sv)
-    tmp = [ [sv[i][1],sv[i][2]] for i in 1:length(sv)]
+    tmp = [ [sv[i][1], sv[i][2]] for i in 1:length(sv)]
     return tmp 
 end
