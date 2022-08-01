@@ -139,6 +139,7 @@ function RecipesBase.plot(field::Matrix{Float64}, para::Parameter, traj::Vector{
     y = [v[2] for v in traj]
     plt = plot!(hm, x, y, label="", c=:white, xlims=(0, para.dx * para.nx), ylims=(0, para.dy * para.ny))
     # plt = scatter!(hm, x,y , label="")
+    # plt = plot!(hm, x, y, label="", c=:white, xlims=(0, para.dx * para.nx), ylims=(0, para.dy * para.ny))
     scatter!(plt, [traj[1][1]], [traj[1][2]], label="")
 
     return plt

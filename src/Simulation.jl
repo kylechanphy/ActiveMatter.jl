@@ -105,28 +105,23 @@ end
 """ single chomotaxis particle in 2D """
 function Langevin!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logger, saving)
     @unpack v0, ω0, flow, flow_dir, Dr, dt, n_step = para
-    vg = flow * SV(cosd(flow_dir), sind(flow_dir))
+    vg = flow * SV(cos(flow_dir), sin(flow_dir))
 
     u0 = p.pos
+    p.pos_fold = periodicbound(u0, para)
     u0_fold = p.pos_fold
 
     du = copy(u0)
     du_fold = copy(u0_fold)
 
     vel0 = p.vel
-    println("hey! here ")
-    @show vel0
     dvel = copy(vel0)
 
     # ii, jj = Int.(round.(u0 ./ SA[para.dx, para.dy])) .+ 1 ### julia array start from 1
     # inter.field[ii, jj] = p.src
     dfield = copy(inter.field)
-    # ff = [[SV(0, 0) for _ in 1:para.nx] for _ in 1:para.ny]
-    # flow = copy(ff)
-    # v00 = 2
-    # p.vel = SV(v00, 0)
-    # vel0 = copy(v0)
-    ϕ = atan(vel0[2], vel0[1])
+    ϕ = p.orient
+    # @show ϕ
 
     getHead(ϕ) = SV(cos(ϕ), sin(ϕ))
 
@@ -135,54 +130,48 @@ function Langevin!(p::AbstractParicles, para::Parameter, inter::Chemotaxis, logg
     @show saving.every
     @showprogress for i in 1:n_step
         hat_p = getHead(ϕ)
-        chemforce, inter.flow = getChemotaxisForce(p, inter, para, dfield)
-
-
+        chemforce, inter.flow = getChemotaxisForce(p, inter, para, dfield, du_fold)
+    
+    
         # @show chemforce
         forces = chemforce + v0 .* hat_p .+ vg
-        # forces = chemforce + SA[v0,v0]
-
-        # if v0 == 0 && i == 2
-        #     forces = +SV(0, v00)
-        #     @show forces
-        # end
-        # forces = 0
-        # forces = chemforce 
-        dvel = forces
-        dϕ = atan(dvel[2], dvel[1]) - atan(vel0[2], vel0[1])
-        if dϕ > π
-            dϕ = 2π - dϕ
-        elseif dϕ < -π
-            dϕ = 2π + dϕ
-        end
-        # @show dϕ/dt
-        p.ω = dϕ / dt
+        # dϕ = p.orient - atan(vel0[2], vel0[1])
+        # if dϕ > π
+        #     dϕ = 2π - dϕ
+        # elseif dϕ < -π
+        #     dϕ = 2π + dϕ
+        # # end
+        # p.ω = dϕ / dt
+        p.ω = ω0
         # @show p.ω
-
-        p.vel = dvel
-        dvel, vel0 = vel0, dvel
-
+    
+        p.vel = forces
+        # dvel, vel0 = vel0, dvel
+    
         p.force = chemforce
         du = u0 .+ forces .* dt
+        # du = u0 + SV(0, 0)
         du_fold = periodicbound(du, para)
+        u0_fold= periodicbound(u0, para)
         # du = periodicbound(du, para)
         # du = u0
-
-
+    
+    
         u0, du = du, u0
         u0_fold, du_fold = du_fold, u0_fold
         p.pos = u0
         p.pos_fold = u0_fold
-
+    
         ϕ += ω0 * dt + sqrt(2Dr * dt)randn()
-
+        p.orient = ϕ
+    
         runLogger!(logger, p, i, para::Parameter, inter)
         if saving.save_concen_field == true
             if i % saving.every == 0 || i == 1
                 save_concen_field(inter.field, para, i, saving)
             end
         end
-
+    
     end
 end
 
@@ -233,6 +222,9 @@ end
 function periodicbound(du::SV, para)
     xlim = (para.dx * para.nx) - para.dx
     ylim = (para.dy * para.ny) - para.dy
+    # xlim = (para.dx * para.nx) 
+    # ylim = (para.dy * para.ny) 
+
 
     # xlim = (para.dx * para.nx) 
     # ylim = (para.dx * para.ny) 
@@ -241,7 +233,7 @@ function periodicbound(du::SV, para)
     if x0 > xlim
         x0 = x0 - xlim * (div(x0, xlim))
     elseif x0 < 0
-        x0 = (div(abs(x0), xlim) + 1)*  xlim + x0
+        x0 = (div(abs(x0), xlim) + 1) * xlim + x0
     end
 
     if y0 > ylim

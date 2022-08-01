@@ -31,8 +31,10 @@ Particle(pos::AbstractArray, v0=0, ϕ0=0.0) = Particle(SV(pos[1], pos[2]), v0 * 
 @with_kw mutable struct ChemoDroplet <: AbstractParicles
     pos::SV = SV(0, 0)
     pos_fold::SV = SV(0, 0)
-    vel::SV = SV(0, 0)
+    orient::Float64 = 0.0
+    vel::SV = SV(0,0)
     ω::Float64 = 1
+
 
     src::Float64 = 1
     srctype::String = "const_flux"

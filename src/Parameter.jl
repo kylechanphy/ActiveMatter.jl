@@ -24,16 +24,25 @@ end
 
 function clfCondi(dx, D, dt)
     dims = length(dx)
-    ddt = prod(dx .^ 2) / ((2 * dims * D + 0.1) * sum(dx .^ 2))
-    if ddt > dt
+    uplim = prod(dx .^ 2) / ((2 * dims * D + 0.1) * sum(dx .^ 2))
+    # uplim = copy(ddt)
+    if uplim > dt
+        ddt = dt 
+    else
+        ddt = dt
+        while uplim < dt
+            dt = dt / 5
+        end
         ddt = dt
     end
+    # end
 
+    # ddt = uplim
     return ddt
 end
 
 function get_dnt(dt, ddt)
-    dnt = Int(round(dt / ddt))
+    dnt = Int(round(dt / ddt ))
     if dnt == 0
         dnt = 1
     end
@@ -41,6 +50,8 @@ function get_dnt(dt, ddt)
     return dnt 
 end
 
+
+    
 
 
 @with_kw mutable struct ParaChemoDroplet <: Parameter
